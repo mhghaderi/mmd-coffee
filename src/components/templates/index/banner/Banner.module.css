@@ -1,0 +1,51 @@
+.bannerContainer {
+    position: relative;
+}
+
+.bannerContainer :global(.swiper-button-next),
+.bannerContainer :global(.swiper-button-prev) {
+    color: #fff;
+    width: 60px;
+    height: 20px;
+    /* background-color: rgba(0, 0, 0, 0.5); */
+    /* border-radius: 50%; */
+    /* backdrop-filter: blur(4px); */
+}
+
+.bannerContainer :global(.swiper-button-next::after),
+.bannerContainer :global(.swiper-button-prev::after) {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.bannerContainer :global(.swiper-button-next:hover),
+.bannerContainer :global(.swiper-button-prev:hover) {
+    /* background-color: rgba(0, 0, 0, 0.8); */
+    color: #8d8d8d;
+}
+
+
+
+.bannerContainer :global(.swiper-pagination) {
+    bottom: 20px !important;
+}
+
+.bannerContainer :global(.swiper-pagination-bullet) {
+    width: 7px;
+    height: 7px;
+    background-color: rgba(255, 255, 255, 0.5); 
+    opacity: 1;
+    transition: all 0.3s ease;
+    margin: 0 6px !important;
+}
+
+
+.bannerContainer :global(.swiper-pagination-bullet-active) {
+    background-color: #ffffff; 
+    width: 20px;
+    border-radius: 5px; 
+}
+
+.bannerContainer :global(.swiper-pagination-bullet:hover) {
+    background-color: rgba(255, 255, 255, 0.8);
+}

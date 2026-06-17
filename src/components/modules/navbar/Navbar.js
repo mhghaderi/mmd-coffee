@@ -1,14 +1,31 @@
-import React from "react";
+"use client";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import styles from "./Navbar.module.css";
 import { IoIosArrowDown } from "react-icons/io";
 import { RiShoppingCart2Line } from "react-icons/ri";
 import { FaRegHeart } from "react-icons/fa6";
 
-
 const Navbar = () => {
+    const [fixTop, setFixTop] = useState(false);
+    useEffect(() => {
+        const fixNavbarToTop = () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 105) {
+                setFixTop(true);
+            } else {
+                setFixTop(false);
+            }
+        };
+
+        window.addEventListener("scroll", fixNavbarToTop);
+
+        return () => window.removeEventListener("scroll", fixNavbarToTop);
+    }, []);
+
     return (
-        <nav className={styles.navbar}>
+        <nav className={fixTop ? styles.navbar_fixed : styles.navbar}>
             <main className={styles}>
                 <div>
                     <Link href="/">
@@ -56,11 +73,11 @@ const Navbar = () => {
                 </div>
                 {/* End  My account dropdown section  */}
                 <div className={styles.navbar_icons}>
-                    <Link href='/cart'>
+                    <Link href="/cart">
                         <RiShoppingCart2Line />
                         <span>1</span>
                     </Link>
-                    <Link href='/wishlist'>
+                    <Link href="/wishlist">
                         <FaRegHeart />
                         <span>1</span>
                     </Link>
