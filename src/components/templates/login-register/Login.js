@@ -9,7 +9,7 @@ const Login = ({ showRegisterForm }) => {
         <>
             {!isLoginWithOtp ? (
                 <>
-                    <div className={styles.form}>
+                    <div className={styles.form} data-aos="zoom-in">
                         <input
                             className={styles.input}
                             type="text"
