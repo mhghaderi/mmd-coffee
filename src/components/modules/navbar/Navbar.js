@@ -21,7 +21,9 @@ const Navbar = () => {
 
         window.addEventListener("scroll", fixNavbarToTop);
 
-        return window.removeEventListener("scroll", fixNavbarToTop);
+        return () => {
+            window.removeEventListener("scroll", fixNavbarToTop);
+        };
     }, []);
 
     return (

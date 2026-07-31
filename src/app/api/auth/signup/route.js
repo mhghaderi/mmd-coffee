@@ -1,7 +1,7 @@
 import connectToDB from "@/configs/db";
 import UserModel from "@/models/User";
-import { generateAccessToken, hashPassword } from "@/utils/auth";
-import { roles } from "@/utils/constants";
+import { generateAccessToken, hashPassword } from "@/lib/utils/auth";
+import { roles } from "@/lib/utils/constants";
 
 const isValidPhone = (phone) => {
     if (!phone) return false;

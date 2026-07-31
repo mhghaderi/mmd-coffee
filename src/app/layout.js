@@ -1,56 +1,56 @@
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import localFont from "next/font/local";
-import AOSInit from "@/utils/aos";
-import ScrollToTop from "@/utils/ScrollToTop";
+import "./globals.css";
+import AppProviders from "@/components/providers/AppProviders";
 
 const pelak = localFont({
     src: [
         {
-            path: "../../public/fonts/pelak/Pelak-light.woff2",
+            path: "./fonts/Pelak-light.woff2",
             weight: "300",
             style: "normal",
         },
         {
-            path: "../../public/fonts/pelak/Pelak-Regular.woff2",
+            path: "./fonts/Pelak-Regular.woff2",
             weight: "400",
             style: "normal",
         },
         {
-            path: "../../public/fonts/pelak/Pelak-Medium.woff2",
+            path: "./fonts/Pelak-Medium.woff2",
             weight: "500",
             style: "normal",
         },
         {
-            path: "../../public/fonts/pelak/Pelak-Bold.woff2",
+            path: "./fonts/Pelak-Bold.woff2",
             weight: "700",
             style: "normal",
         },
         {
-            path: "../../public/fonts/pelak/Pelak-Black.woff2",
+            path: "./fonts/Pelak-Black.woff2",
             weight: "900",
             style: "normal",
         },
     ],
     variable: "--font-pelak",
-    // weight: "300 400 500 700 900",
+    display: "swap",
+    fallback: ["Tahoma", "Arial", "sans-serif"],
 });
 
 export const metadata = {
-    title: "فروشگاه اینترنتی ممد کافی | صفحه اصلی",
-    description: "صفحه اصلی فروشگاه اینترنتی ممد کافی | فروش بهترین قهوه ها",
-    icons: "/images/fav-icon.png",
+    title: {
+        default: "MMD Coffee | ممد کافی",
+        template: "%s | MMD Coffee",
+    },
+
+    description: "سفارش آنلاین قهوه، نوشیدنی، دسر و محصولات کافه از ممد کافی",
+
+    keywords: ["MMD Coffee", "ممد کافی", "کافه", "قهوه", "سفارش آنلاین قهوه", "نوشیدنی", "دسر"],
 };
 
 export default function RootLayout({ children }) {
     return (
-        <html lang="fa" dir="ltr">
-            <body>
-                <AOSInit />
-
-                {children}
-
-                <ScrollToTop />
+        <html lang="fa" dir="rtl">
+            <body className={`${pelak.className} ${pelak.variable}`}>
+                <AppProviders>{children}</AppProviders>
             </body>
         </html>
     );
