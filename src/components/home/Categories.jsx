@@ -1,108 +1,93 @@
 import Link from "next/link";
 
-import {
-  FiArrowLeft,
-  FiBox,
-  FiCoffee,
-  FiDroplet,
-  FiGift,
-} from "react-icons/fi";
+import { FiArrowLeft, FiCoffee } from "react-icons/fi";
 
-import SectionHeading from "@/components/ui/SectionHeading";
-import { productCategories, products } from "@/data/products";
+export default function Categories({ categories = [] }) {
+    if (!categories.length) {
+        return null;
+    }
 
-const categoryIcons = {
-  "hot-drinks": FiCoffee,
-  "cold-drinks": FiDroplet,
-  desserts: FiGift,
-  "coffee-beans": FiBox,
-};
+    return (
+        <section className="page-container section-spacing">
+            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    <p className="text-xs font-bold text-caramel-600">دسته‌بندی محصولات</p>
 
-const categoryStyles = {
-  "hot-drinks": {
-    background: "bg-[#f3e6db]",
-    icon: "text-[#8c5232]",
-  },
+                    <h2 className="mt-2 text-3xl font-black text-coffee-950">
+                        برای هر سلیقه، یک انتخاب
+                    </h2>
 
-  "cold-drinks": {
-    background: "bg-[#e1ecec]",
-    icon: "text-[#3e7376]",
-  },
+                    <p className="mt-3 max-w-xl text-sm leading-7 text-coffee-500">
+                        از میان قهوه‌ها، نوشیدنی‌ها و خوراکی‌های ممد کافی انتخاب کن.
+                    </p>
+                </div>
 
-  desserts: {
-    background: "bg-[#f6e7e2]",
-    icon: "text-[#a65d53]",
-  },
-
-  "coffee-beans": {
-    background: "bg-[#e8e2d7]",
-    icon: "text-[#66523a]",
-  },
-};
-
-export default function Categories() {
-  const visibleCategories = productCategories.filter(
-    (category) => category.id !== "all",
-  );
-
-  return (
-    <section className="section-spacing">
-      <div className="page-container">
-        <SectionHeading
-          eyebrow="دسته‌بندی‌ها"
-          title="امروز چی میل داری؟"
-          description="از نوشیدنی‌های گرم و سرد تا دسرهای تازه؛ انتخابت را سریع‌تر پیدا کن."
-          actionTitle="مشاهده منوی کامل"
-          actionHref="/menu"
-        />
-
-        <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {visibleCategories.map((category) => {
-            const Icon = categoryIcons[category.id] || FiCoffee;
-            const styles = categoryStyles[category.id];
-
-            const productsCount = products.filter(
-              (product) => product.category === category.id,
-            ).length;
-
-            return (
-              <Link
-                key={category.id}
-                href={`/menu?category=${category.id}`}
-                className="group relative min-h-60 overflow-hidden rounded-[1.75rem] border border-coffee-100 bg-white p-6 shadow-[0_12px_35px_rgba(48,32,26,0.06)] transition-all duration-500 hover:-translate-y-2 hover:border-coffee-200 hover:shadow-[0_24px_55px_rgba(48,32,26,0.12)]"
-              >
-                <div
-                  className={`flex size-14 items-center justify-center rounded-2xl ${styles.background} ${styles.icon} transition-transform duration-500 group-hover:rotate-6 group-hover:scale-110`}
+                <Link
+                    href="/menu"
+                    className="inline-flex items-center gap-2 text-xs font-black text-coffee-600 transition hover:text-caramel-600"
                 >
-                  <Icon size={25} />
-                </div>
+                    مشاهده همه محصولات
+                    <FiArrowLeft />
+                </Link>
+            </div>
 
-                <div className="mt-8">
-                  <h3 className="text-xl font-black text-coffee-950">
-                    {category.title}
-                  </h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {categories.map((category) => (
+                    <Link
+                        key={category._id}
+                        href={`/menu?category=${encodeURIComponent(category.slug)}`}
+                        className="group relative min-h-52 overflow-hidden rounded-[1.75rem] border border-coffee-100 bg-white p-5 shadow-[0_12px_40px_rgba(48,32,26,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(48,32,26,0.10)]"
+                    >
+                        <div
+                            aria-hidden="true"
+                            className="absolute -left-12 -top-12 size-36 rounded-full opacity-20 blur-2xl transition group-hover:scale-125"
+                            style={{
+                                backgroundColor: category.accentColor || "#c8793f",
+                            }}
+                        />
 
-                  <p className="mt-2 text-sm leading-7 text-coffee-500">
-                    {category.description}
-                  </p>
-                </div>
+                        <div className="relative flex items-start justify-between gap-4">
+                            <div
+                                className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl"
+                                style={{
+                                    backgroundColor: `${category.accentColor || "#c8793f"}18`,
+                                }}
+                            >
+                                {category.image ? (
+                                    <img
+                                        src={category.image}
+                                        alt={category.imageAlt || category.title}
+                                        className="size-full object-contain p-2"
+                                    />
+                                ) : (
+                                    <FiCoffee
+                                        size={24}
+                                        style={{
+                                            color: category.accentColor || "#c8793f",
+                                        }}
+                                    />
+                                )}
+                            </div>
 
-                <div className="absolute bottom-6 left-6 right-6 flex items-center justify-between">
-                  <span className="text-xs font-bold text-coffee-400">
-                    {productsCount.toLocaleString("fa-IR")} محصول
-                  </span>
+                            <span className="flex size-9 items-center justify-center rounded-xl bg-cream-50 text-coffee-400 transition group-hover:bg-coffee-900 group-hover:text-white">
+                                <FiArrowLeft className="text-current" />
+                            </span>
+                        </div>
 
-                  <span className="flex size-10 items-center justify-center rounded-full bg-cream-100 text-coffee-700 transition-all duration-300 group-hover:bg-coffee-900 group-hover:text-white">
-                    <FiArrowLeft className="transition-transform duration-300 group-hover:-translate-x-1" />
-                  </span>
-                </div>
+                        <div className="relative mt-8">
+                            <h3 className="text-lg font-black text-coffee-950">{category.title}</h3>
 
-                <div className="pointer-events-none absolute -bottom-20 -left-16 size-44 rounded-full bg-caramel-100/40 blur-3xl transition duration-500 group-hover:scale-150" />
-              </Link>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
+                            <p className="mt-2 line-clamp-2 min-h-12 text-xs leading-6 text-coffee-400">
+                                {category.description || `محصولات دسته ${category.title} ممد کافی`}
+                            </p>
+
+                            <p className="mt-5 text-xs font-black text-caramel-600">
+                                {category.productCount.toLocaleString("fa-IR")} محصول
+                            </p>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </section>
+    );
 }

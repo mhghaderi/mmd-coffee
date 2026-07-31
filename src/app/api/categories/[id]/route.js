@@ -1,28 +1,85 @@
 import mongoose from "mongoose";
 
 import connectToDB from "@/lib/db/connectToDB";
-import Category from "@/models/Category";
 
-// دریافت یک دسته‌بندی
+import { getCurrentUser, requireAdmin } from "@/lib/auth/session";
+
+import Category from "@/models/Category";
+import Product from "@/models/Product";
+
+function hasOwn(object, key) {
+    return Object.prototype.hasOwnProperty.call(object, key);
+}
+
+function createCategoryFilter(identifier) {
+    if (mongoose.isValidObjectId(identifier)) {
+        return {
+            _id: identifier,
+        };
+    }
+
+    return {
+        slug: identifier.trim().toLowerCase(),
+    };
+}
+
+function createErrorResponse(error, message) {
+    console.error(message, error);
+
+    if (error.code === 11000) {
+        return Response.json(
+            {
+                success: false,
+                message: "دسته‌بندی با این اسلاگ قبلاً ثبت شده است",
+            },
+            {
+                status: 409,
+            },
+        );
+    }
+
+    if (error.name === "ValidationError") {
+        const errors = Object.values(error.errors).map((item) => item.message);
+
+        return Response.json(
+            {
+                success: false,
+                message: errors[0] || "اطلاعات دسته‌بندی معتبر نیست",
+                errors,
+            },
+            {
+                status: 400,
+            },
+        );
+    }
+
+    return Response.json(
+        {
+            success: false,
+            message,
+        },
+        {
+            status: 500,
+        },
+    );
+}
+
 export async function GET(request, { params }) {
     try {
         await connectToDB();
 
         const { id } = await params;
 
-        if (!mongoose.isValidObjectId(id)) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "شناسه دسته‌بندی معتبر نیست",
-                },
-                {
-                    status: 400,
-                },
-            );
+        const currentUser = await getCurrentUser();
+
+        const filter = createCategoryFilter(id);
+
+        if (currentUser?.role !== "admin") {
+            filter.archivedAt = null;
+            filter.isActive = true;
         }
 
-        const category = await Category.findById(id).lean();
+        const category = await Category.findOne(filter).lean();
 
         if (!category) {
             return Response.json(
@@ -36,124 +93,113 @@ export async function GET(request, { params }) {
             );
         }
 
-        return Response.json(
-            {
-                success: true,
-                data: category,
-            },
-            {
-                status: 200,
-            },
-        );
-    } catch (error) {
-        console.error("GET CATEGORY ERROR:", error);
+        const productCount = await Product.countDocuments({
+            category: category._id,
+        });
 
-        return Response.json(
-            {
-                success: false,
-                message: "دریافت دسته‌بندی انجام نشد",
-                error: error.message,
+        return Response.json({
+            success: true,
+
+            data: {
+                ...category,
+                _id: category._id.toString(),
+                productCount,
             },
-            {
-                status: 500,
-            },
-        );
+        });
+    } catch (error) {
+        return createErrorResponse(error, "دریافت دسته‌بندی انجام نشد");
     }
 }
 
-// ویرایش دسته‌بندی
 export async function PATCH(request, { params }) {
+    const authorization = await requireAdmin();
+
+    if (!authorization.ok) {
+        return authorization.response;
+    }
+
     try {
         await connectToDB();
 
         const { id } = await params;
 
-        if (!mongoose.isValidObjectId(id)) {
+        const category = await Category.findOne(createCategoryFilter(id));
+
+        if (!category) {
             return Response.json(
                 {
                     success: false,
-                    message: "شناسه دسته‌بندی معتبر نیست",
+                    message: "دسته‌بندی پیدا نشد",
                 },
                 {
-                    status: 400,
+                    status: 404,
                 },
             );
         }
 
         const body = await request.json();
 
-        // فقط فیلدهای مجاز را وارد updateData می‌کنیم
-        const updateData = {};
+        if (body.restore === true) {
+            category.archivedAt = null;
+            category.isActive = true;
 
-        if (typeof body.title === "string") {
-            updateData.title = body.title.trim();
+            await category.save();
+
+            return Response.json({
+                success: true,
+                message: "دسته‌بندی با موفقیت بازیابی شد",
+                data: category,
+            });
         }
 
-        if (typeof body.slug === "string") {
-            updateData.slug = body.slug.trim().toLowerCase();
-        }
+        const update = {};
 
-        if (typeof body.description === "string") {
-            updateData.description = body.description.trim();
-        }
+        const stringFields = [
+            "title",
+            "slug",
+            "description",
+            "image",
+            "imageAlt",
+            "accentColor",
+            "seoTitle",
+            "seoDescription",
+        ];
 
-        if (typeof body.image === "string") {
-            updateData.image = body.image.trim();
-        }
+        for (const field of stringFields) {
+            if (!hasOwn(body, field)) {
+                continue;
+            }
 
-        if (typeof body.isActive === "boolean") {
-            updateData.isActive = body.isActive;
-        }
-
-        if (Object.keys(updateData).length === 0) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "حداقل یک فیلد برای ویرایش ارسال کنید",
-                },
-                {
-                    status: 400,
-                },
-            );
-        }
-
-        if (
-            ("title" in updateData && !updateData.title) ||
-            ("slug" in updateData && !updateData.slug)
-        ) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "عنوان و اسلاگ نمی‌توانند خالی باشند",
-                },
-                {
-                    status: 400,
-                },
-            );
-        }
-
-        // بررسی می‌کنیم عنوان یا اسلاگ متعلق به دسته دیگری نباشد
-        const duplicateConditions = [];
-
-        if (updateData.title) {
-            duplicateConditions.push({ title: updateData.title });
-        }
-
-        if (updateData.slug) {
-            duplicateConditions.push({ slug: updateData.slug });
-        }
-
-        if (duplicateConditions.length > 0) {
-            const existingCategory = await Category.findOne({
-                _id: { $ne: id },
-                $or: duplicateConditions,
-            }).lean();
-
-            if (existingCategory) {
+            if (typeof body[field] !== "string") {
                 return Response.json(
                     {
                         success: false,
-                        message: "دسته‌بندی دیگری با این عنوان یا اسلاگ وجود دارد",
+                        message: `${field} باید متنی باشد`,
+                    },
+                    {
+                        status: 400,
+                    },
+                );
+            }
+
+            update[field] = body[field].trim();
+        }
+
+        if (hasOwn(update, "slug")) {
+            update.slug = update.slug.toLowerCase();
+
+            const duplicateCategory = await Category.exists({
+                _id: {
+                    $ne: category._id,
+                },
+                slug: update.slug,
+            });
+
+            if (duplicateCategory) {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "دسته‌بندی با این اسلاگ قبلاً ثبت شده است",
                     },
                     {
                         status: 409,
@@ -162,102 +208,77 @@ export async function PATCH(request, { params }) {
             }
         }
 
-        const updatedCategory = await Category.findByIdAndUpdate(
-            id,
-            {
-                $set: updateData,
-            },
-            {
-                new: true,
-                runValidators: true,
-            },
-        );
+        if (hasOwn(body, "isActive")) {
+            if (typeof body.isActive !== "boolean") {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "وضعیت دسته‌بندی معتبر نیست",
+                    },
+                    {
+                        status: 400,
+                    },
+                );
+            }
 
-        if (!updatedCategory) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "دسته‌بندی پیدا نشد",
-                },
-                {
-                    status: 404,
-                },
-            );
+            update.isActive = body.isActive;
         }
 
-        return Response.json(
-            {
-                success: true,
-                message: "دسته‌بندی با موفقیت ویرایش شد",
-                data: updatedCategory,
+        if (hasOwn(body, "displayOrder")) {
+            const displayOrder = Number(body.displayOrder);
+
+            if (!Number.isFinite(displayOrder)) {
+                return Response.json(
+                    {
+                        success: false,
+                        message: "ترتیب نمایش باید عدد باشد",
+                    },
+                    {
+                        status: 400,
+                    },
+                );
+            }
+
+            update.displayOrder = displayOrder;
+        }
+
+        category.set(update);
+
+        await category.save();
+
+        const productCount = await Product.countDocuments({
+            category: category._id,
+        });
+
+        return Response.json({
+            success: true,
+            message: "دسته‌بندی با موفقیت ویرایش شد",
+
+            data: {
+                ...category.toObject(),
+                productCount,
             },
-            {
-                status: 200,
-            },
-        );
+        });
     } catch (error) {
-        console.error("UPDATE CATEGORY ERROR:", error);
-
-        if (error.code === 11000) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "عنوان یا اسلاگ تکراری است",
-                },
-                {
-                    status: 409,
-                },
-            );
-        }
-
-        if (error.name === "ValidationError") {
-            return Response.json(
-                {
-                    success: false,
-                    message: "اطلاعات واردشده معتبر نیست",
-                    error: error.message,
-                },
-                {
-                    status: 400,
-                },
-            );
-        }
-
-        return Response.json(
-            {
-                success: false,
-                message: "ویرایش دسته‌بندی انجام نشد",
-                error: error.message,
-            },
-            {
-                status: 500,
-            },
-        );
+        return createErrorResponse(error, "ویرایش دسته‌بندی انجام نشد");
     }
 }
 
-// حذف دسته‌بندی
 export async function DELETE(request, { params }) {
+    const authorization = await requireAdmin();
+
+    if (!authorization.ok) {
+        return authorization.response;
+    }
+
     try {
         await connectToDB();
 
         const { id } = await params;
 
-        if (!mongoose.isValidObjectId(id)) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "شناسه دسته‌بندی معتبر نیست",
-                },
-                {
-                    status: 400,
-                },
-            );
-        }
+        const category = await Category.findOne(createCategoryFilter(id));
 
-        const deletedCategory = await Category.findByIdAndDelete(id);
-
-        if (!deletedCategory) {
+        if (!category) {
             return Response.json(
                 {
                     success: false,
@@ -269,28 +290,46 @@ export async function DELETE(request, { params }) {
             );
         }
 
-        return Response.json(
-            {
-                success: true,
-                message: "دسته‌بندی با موفقیت حذف شد",
-                data: deletedCategory,
-            },
-            {
-                status: 200,
-            },
-        );
-    } catch (error) {
-        console.error("DELETE CATEGORY ERROR:", error);
+        const productCount = await Product.countDocuments({
+            category: category._id,
+        });
 
-        return Response.json(
-            {
-                success: false,
-                message: "حذف دسته‌بندی انجام نشد",
-                error: error.message,
+        if (category.archivedAt) {
+            return Response.json({
+                success: true,
+                message: "این دسته‌بندی قبلاً بایگانی شده است",
+                data: {
+                    ...category.toObject(),
+                    productCount,
+                },
+            });
+        }
+
+        /*
+      دسته‌بندی حذف دائمی نمی‌شود تا ارتباط
+      محصولات قبلی از بین نرود.
+    */
+
+        category.archivedAt = new Date();
+        category.isActive = false;
+
+        await category.save();
+
+        return Response.json({
+            success: true,
+            message:
+                productCount > 0
+                    ? `دسته‌بندی بایگانی شد و ارتباط ${productCount.toLocaleString(
+                          "fa-IR",
+                      )} محصول حفظ شد`
+                    : "دسته‌بندی با موفقیت بایگانی شد",
+
+            data: {
+                ...category.toObject(),
+                productCount,
             },
-            {
-                status: 500,
-            },
-        );
+        });
+    } catch (error) {
+        return createErrorResponse(error, "بایگانی دسته‌بندی انجام نشد");
     }
 }

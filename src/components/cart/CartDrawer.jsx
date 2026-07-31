@@ -19,6 +19,7 @@ export default function CartDrawer({ isOpen, onClose }) {
         decreaseQuantity,
         removeFromCart,
         clearCart,
+        closeCart,
     } = useStore();
 
     useEffect(() => {
@@ -95,7 +96,7 @@ export default function CartDrawer({ isOpen, onClose }) {
                         <Link
                             href="/menu"
                             onClick={onClose}
-                            className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-coffee-900 px-6 text-sm font-bold text-white transition hover:bg-coffee-800"
+                            className="mt-6 inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-coffee-900 px-6 text-sm font-bold !text-white transition hover:bg-coffee-800"
                         >
                             مشاهده منو
                             <FiArrowLeft />
@@ -224,11 +225,12 @@ export default function CartDrawer({ isOpen, onClose }) {
 
                             <Link
                                 href="/checkout"
-                                onClick={onClose}
-                                className="mt-4 flex h-14 items-center justify-center gap-3 rounded-2xl bg-coffee-900 px-5 text-sm font-black text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-coffee-800"
+                                onClick={closeCart}
+                                className="flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-coffee-900 px-5 text-sm font-black text-white transition hover:bg-coffee-800"
                             >
-                                ادامه فرایند خرید
-                                <FiArrowLeft />
+                                <FiShoppingBag className="text-current" />
+
+                                <span className="text-current">تکمیل و ثبت سفارش</span>
                             </Link>
                         </div>
                     </>

@@ -15,7 +15,6 @@ import {
     FiStar,
 } from "react-icons/fi";
 
-
 function shuffleProducts(products) {
     const shuffledProducts = [...products];
 
@@ -74,7 +73,7 @@ function selectFeaturedProducts(products, previousIds = [], count = 3) {
     return selectedProducts;
 }
 
-export default function Hero() {
+export default function Hero({ products = [] }) {
     const initialProducts = [...featuredProductPool]
         .sort((firstProduct, secondProduct) => {
             return secondProduct.popularityScore - firstProduct.popularityScore;
@@ -248,7 +247,7 @@ export default function Hero() {
                     <div className="mt-8">
                         <Link
                             href="/menu"
-                            className="group inline-flex h-14 items-center justify-center gap-3 rounded-2xl bg-coffee-900 px-7 text-sm font-bold text-white shadow-[0_16px_35px_rgba(48,32,26,0.20)] transition duration-300 hover:-translate-y-1 hover:bg-coffee-800 hover:shadow-[0_20px_45px_rgba(48,32,26,0.28)]"
+                            className="group inline-flex h-14 items-center justify-center gap-3 rounded-2xl bg-coffee-900 px-7 text-sm font-bold !text-white shadow-[0_16px_35px_rgba(48,32,26,0.20)] transition duration-300 hover:-translate-y-1 hover:bg-coffee-800 hover:shadow-[0_20px_45px_rgba(48,32,26,0.28)]"
                         >
                             <FiShoppingBag className="text-lg" />
                             مشاهده منوی ممد کافی
@@ -324,7 +323,7 @@ export default function Hero() {
 
                             {/* Product cutout image */}
 
-                            <div className="hero-float relative h-[140%] w-[140%]">
+                            <div className="hero-float relative h-[120%] w-[120%]">
                                 {activeProduct.image ? (
                                     <Image
                                         key={activeProduct.id}

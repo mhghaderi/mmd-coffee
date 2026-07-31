@@ -90,7 +90,7 @@ button {
 }
 
 a {
-    color: inherit;
+    /* color: inherit; */
     text-decoration: none;
 }
 
@@ -154,5 +154,36 @@ svg {
 @media (prefers-reduced-motion: reduce) {
     .hero-float {
         animation: none;
+    }
+}
+
+/* ============= */
+
+@media print {
+    body {
+        background: white;
+    }
+
+    aside[aria-label="منوی مدیریت"],
+    header.sticky {
+        display: none !important;
+    }
+
+    main {
+        padding: 0 !important;
+    }
+
+    .print\:hidden {
+        display: none !important;
+    }
+
+    .print\:block {
+        display: block !important;
+    }
+
+    article,
+    section {
+        box-shadow: none !important;
+        break-inside: avoid;
     }
 }

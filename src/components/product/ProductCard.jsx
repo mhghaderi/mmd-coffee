@@ -4,14 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 
-import { FiCheck, FiHeart, FiShoppingBag, FiStar } from "react-icons/fi";
+import { FiCheck, FiHeart, FiShoppingBag, FiStar, FiZap } from "react-icons/fi";
 import { useStore } from "@/context/StoreContext";
 
 const priceFormatter = new Intl.NumberFormat("fa-IR");
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, recommendationLabel }) {
     const { addToCart, toggleWishlist, isInWishlist, getCartItemQuantity } = useStore();
-
+ 
     const isFavorite = isInWishlist(product.id);
     const cartQuantity = getCartItemQuantity(product.id);
 
@@ -124,7 +124,15 @@ export default function ProductCard({ product }) {
                 <p className="mt-3 line-clamp-2 min-h-14 text-sm leading-7 text-coffee-500">
                     {product.shortDescription}
                 </p>
+                {recommendationLabel && (
+                    <div className="mt-3">
+                        <span className="inline-flex items-center gap-1.5 rounded-full border border-caramel-100 bg-caramel-50 px-3 py-1.5 text-[11px] font-bold text-caramel-700">
+                            <FiZap className="text-caramel-500" />
 
+                            {recommendationLabel}
+                        </span>
+                    </div>
+                )}
                 <div className="mt-5 flex items-end justify-between gap-3 border-t border-coffee-100 pt-4">
                     <div>
                         {product.discountPercent > 0 && (

@@ -52,7 +52,7 @@ export const products = [
         reviewsCount: 128,
         popularityScore: 98,
 
-        image: "/images/product/espresso-cutout.png",
+        image: "/images/product/espresso-cutout.webp",
 
         isAvailable: true,
         isNew: false,
@@ -81,7 +81,7 @@ export const products = [
         reviewsCount: 94,
         popularityScore: 95,
 
-        image: "/images/product/latte-cutout.png",
+        image: "/images/product/latte-cutout.webp",
 
         isAvailable: true,
         isNew: false,
@@ -110,7 +110,7 @@ export const products = [
         reviewsCount: 76,
         popularityScore: 91,
 
-        image: "/images/product/cold-brew-cutout.png",
+        image: "/images/product/cold-brew-cutout.webp",
 
         isAvailable: true,
         isNew: true,
@@ -139,7 +139,7 @@ export const products = [
         reviewsCount: 87,
         popularityScore: 89,
 
-        image: "/images/product/mocha-cutout.png",
+        image: "/images/product/mocha-cutout.webp",
 
         isAvailable: true,
         isNew: false,
@@ -168,7 +168,7 @@ export const products = [
         reviewsCount: 113,
         popularityScore: 93,
 
-        image: "/images/product/caramel-macchiato-cutout.png",
+        image: "/images/product/caramel-macchiato-cutout.webp",
 
         isAvailable: true,
         isNew: false,
@@ -197,7 +197,7 @@ export const products = [
         reviewsCount: 61,
         popularityScore: 86,
 
-        image: "/images/product/affogato-cutout.png",
+        image: "/images/product/affogato-cutout.webp",
 
         isAvailable: true,
         isNew: true,

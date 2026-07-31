@@ -1,74 +1,148 @@
 "use client";
 
+import Link from "next/link";
+
 import { useMemo, useState } from "react";
 
+import { FiArrowLeft, FiClock, FiPercent, FiStar } from "react-icons/fi";
+
 import ProductCard from "@/components/product/ProductCard";
-import SectionHeading from "@/components/ui/SectionHeading";
-import { getPopularProducts, productCategories } from "@/data/products";
 
-export default function PopularProducts() {
-    const [activeCategory, setActiveCategory] = useState("all");
+function mergeProducts(...collections) {
+    const productMap = new Map();
 
-    const popularProducts = useMemo(() => getPopularProducts(8), []);
-
-    const filteredProducts = useMemo(() => {
-        if (activeCategory === "all") {
-            return popularProducts;
+    collections.flat().forEach((product) => {
+        if (!product?._id) {
+            return;
         }
 
-        return popularProducts.filter((product) => product.category === activeCategory);
-    }, [activeCategory, popularProducts]);
+        productMap.set(product._id, product);
+    });
+
+    return [...productMap.values()];
+}
+
+const filters = [
+    {
+        value: "popular",
+        title: "محبوب‌ترین",
+        icon: FiStar,
+    },
+    {
+        value: "newest",
+        title: "جدیدترین",
+        icon: FiClock,
+    },
+    {
+        value: "discounted",
+        title: "تخفیف‌دار",
+        icon: FiPercent,
+    },
+];
+
+export default function PopularProducts({ products = [], newestProducts = [] }) {
+    const [activeFilter, setActiveFilter] = useState("popular");
+
+    const allProducts = useMemo(
+        () => mergeProducts(products, newestProducts),
+        [products, newestProducts],
+    );
+
+    const visibleProducts = useMemo(() => {
+        if (activeFilter === "newest") {
+            return newestProducts.slice(0, 8);
+        }
+
+        if (activeFilter === "discounted") {
+            return allProducts
+                .filter((product) => Number(product.discountPercent) > 0)
+                .sort(
+                    (first, second) =>
+                        Number(second.discountPercent) - Number(first.discountPercent),
+                )
+                .slice(0, 8);
+        }
+
+        return products.slice(0, 8);
+    }, [activeFilter, allProducts, newestProducts, products]);
+
+    if (!allProducts.length) {
+        return null;
+    }
 
     return (
-        <section className="section-spacing bg-white">
-            <div className="page-container">
-                <SectionHeading
-                    eyebrow="محبوب‌ترین انتخاب‌ها"
-                    title="پرطرفدارهای ممد کافی"
-                    description="محصولاتی که بیشتر از بقیه سفارش داده شده‌اند و امتیاز بالاتری از مشتری‌ها گرفته‌اند."
-                    actionTitle="مشاهده همه محصولات"
-                    actionHref="/menu"
-                />
+        <section className="page-container section-spacing">
+            <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <p className="text-xs font-bold text-caramel-600">انتخاب‌های پرطرفدار</p>
 
-                <div className="mt-8 flex gap-2 overflow-x-auto pb-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {productCategories.map((category) => {
-                        const isActive = activeCategory === category.id;
+                    <h2 className="mt-2 text-3xl font-black text-coffee-950">محبوب‌های ممد کافی</h2>
+
+                    <p className="mt-3 max-w-xl text-sm leading-7 text-coffee-500">
+                        محصولاتی که بیشتر از بقیه مورد توجه مشتری‌های ممد کافی قرار گرفته‌اند.
+                    </p>
+                </div>
+
+                <div className="flex max-w-full gap-2 overflow-x-auto pb-1">
+                    {filters.map((filter) => {
+                        const Icon = filter.icon;
+
+                        const isActive = activeFilter === filter.value;
 
                         return (
                             <button
-                                key={category.id}
+                                key={filter.value}
                                 type="button"
                                 aria-pressed={isActive}
-                                onClick={() => setActiveCategory(category.id)}
-                                className={`shrink-0 rounded-full px-5 py-2.5 text-sm font-bold transition-all duration-300 ${
+                                onClick={() => setActiveFilter(filter.value)}
+                                className={`inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition ${
                                     isActive
-                                        ? "bg-coffee-900 text-white shadow-md"
-                                        : "border border-coffee-100 bg-cream-50 text-coffee-600 hover:border-coffee-200 hover:bg-cream-100 hover:text-coffee-950"
+                                        ? "bg-coffee-900 text-white shadow-sm"
+                                        : "border border-coffee-100 bg-white text-coffee-500 hover:bg-cream-100 hover:text-coffee-950"
                                 }`}
                             >
-                                {category.shortTitle}
+                                <Icon className="text-current" />
+
+                                <span className="text-current">{filter.title}</span>
                             </button>
                         );
                     })}
                 </div>
+            </div>
 
-                {filteredProducts.length > 0 ? (
-                    <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {filteredProducts.map((product) => (
-                            <ProductCard key={product.id} product={product} />
-                        ))}
-                    </div>
-                ) : (
-                    <div className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-[2rem] border border-dashed border-coffee-200 bg-cream-50 px-5 text-center">
-                        <p className="text-lg font-black text-coffee-900">
-                            محصولی در این دسته وجود ندارد
-                        </p>
+            {visibleProducts.length > 0 ? (
+                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {visibleProducts.map((product) => (
+                        <ProductCard key={product._id} product={product} />
+                    ))}
+                </div>
+            ) : (
+                <div className="rounded-[2rem] border border-dashed border-coffee-200 bg-white px-6 py-14 text-center">
+                    <FiPercent className="mx-auto text-3xl text-coffee-300" />
 
-                        <p className="mt-2 text-sm text-coffee-500">
-                            با اضافه‌شدن محصولات جدید، این قسمت هم به‌روزرسانی می‌شود.
-                        </p>
-                    </div>
-                )}
+                    <h3 className="mt-4 text-lg font-black text-coffee-950">
+                        فعلاً محصول تخفیف‌داری نداریم
+                    </h3>
+
+                    <p className="mt-2 text-sm text-coffee-400">سایر محصولات محبوب را بررسی کن.</p>
+                </div>
+            )}
+
+            <div className="mt-8 flex justify-center">
+                <Link
+                    href={
+                        activeFilter === "discounted"
+                            ? "/menu?discounted=true"
+                            : activeFilter === "newest"
+                              ? "/menu?sort=newest"
+                              : "/menu?sort=popular"
+                    }
+                    className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-coffee-100 bg-white px-6 text-sm font-black text-coffee-700 transition hover:bg-coffee-900 hover:text-white"
+                >
+                    <span className="text-current">مشاهده محصولات بیشتر</span>
+
+                    <FiArrowLeft className="text-current" />
+                </Link>
             </div>
         </section>
     );
