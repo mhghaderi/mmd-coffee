@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">French Press</title><desc id="desc">MMD Coffee product illustration</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf3"/><stop offset="1" stop-color="#98725a" stop-opacity=".25"/></linearGradient><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#2f211b" flood-opacity=".16"/></filter></defs>
+<rect width="512" height="512" rx="92" fill="url(#bg)"/>
+<circle cx="410" cy="102" r="66" fill="#98725a" opacity=".12"/><circle cx="91" cy="410" r="92" fill="#98725a" opacity=".10"/>
+<g filter="url(#shadow)"><rect x="174" y="155" width="164" height="220" rx="22" fill="#fffaf3" stroke="#2f211b" stroke-width="11"/><path d="M198 240h116v111H198z" fill="#98725a" opacity=".75"/><path d="M256 92v138M213 92h86" stroke="#2f211b" stroke-width="12" stroke-linecap="round"/><path d="M338 205h35c28 0 42 22 42 50s-14 50-42 50h-35" fill="none" stroke="#2f211b" stroke-width="11"/></g>
+<text x="256" y="458" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#2f211b">FRENCH</text>
+<text x="256" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-weight="600" font-size="16" fill="#7b5a49">PRESS</text>
+</svg>

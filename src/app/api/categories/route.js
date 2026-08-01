@@ -159,6 +159,8 @@ export async function POST(request) {
 
             description: typeof body.description === "string" ? body.description.trim() : "",
 
+            catalogType: body.catalogType === "shop" ? "shop" : "cafe",
+
             image: typeof body.image === "string" ? body.image.trim() : "",
 
             imageAlt: typeof body.imageAlt === "string" ? body.imageAlt.trim() : "",

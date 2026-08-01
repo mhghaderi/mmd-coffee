@@ -12,11 +12,22 @@ export async function POST(request) {
     try {
         await connectToDB();
 
-        const body = await request.json();
+        let body;
+        try {
+            body = await request.json();
+        } catch {
+            return Response.json(
+                {
+                    success: false,
+                    message: "اطلاعات ورود معتبر نیست",
+                },
+                { status: 400 },
+            );
+        }
 
-        const email = normalizeEmail(body.email);
+        const email = normalizeEmail(body?.email);
 
-        const password = typeof body.password === "string" ? body.password : "";
+        const password = typeof body?.password === "string" ? body.password : "";
 
         if (!email || !password) {
             return Response.json(

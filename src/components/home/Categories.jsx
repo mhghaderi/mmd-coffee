@@ -1,92 +1,42 @@
 import Link from "next/link";
+import { FiArrowLeft, FiCoffee, FiShoppingBag } from "react-icons/fi";
 
-import { FiArrowLeft, FiCoffee } from "react-icons/fi";
-
-export default function Categories({ categories = [] }) {
-    if (!categories.length) {
-        return null;
-    }
+export default function Categories({ categories = [], content = {} }) {
+    if (!categories.length) return null;
 
     return (
         <section className="page-container section-spacing">
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="mb-6 flex items-end justify-between gap-4">
                 <div>
-                    <p className="text-xs font-bold text-caramel-600">دسته‌بندی محصولات</p>
-
-                    <h2 className="mt-2 text-3xl font-black text-coffee-950">
-                        برای هر سلیقه، یک انتخاب
-                    </h2>
-
-                    <p className="mt-3 max-w-xl text-sm leading-7 text-coffee-500">
-                        از میان قهوه‌ها، نوشیدنی‌ها و خوراکی‌های ممد کافی انتخاب کن.
-                    </p>
+                    <p className="text-xs font-bold text-caramel-600">{content.eyebrow || "دسته‌بندی‌ها"}</p>
+                    <h2 className="mt-2 text-2xl font-black text-coffee-950 sm:text-3xl">{content.title || "سریع‌تر به انتخابت برس"}</h2>
                 </div>
-
-                <Link
-                    href="/menu"
-                    className="inline-flex items-center gap-2 text-xs font-black text-coffee-600 transition hover:text-caramel-600"
-                >
-                    مشاهده همه محصولات
-                    <FiArrowLeft />
+                <Link href="/menu" className="hidden items-center gap-2 text-xs font-black text-coffee-500 transition hover:text-caramel-600 sm:flex">
+                    مشاهده منو <FiArrowLeft />
                 </Link>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {categories.map((category) => (
-                    <Link
-                        key={category._id}
-                        href={`/menu?category=${encodeURIComponent(category.slug)}`}
-                        className="group relative min-h-52 overflow-hidden rounded-[1.75rem] border border-coffee-100 bg-white p-5 shadow-[0_12px_40px_rgba(48,32,26,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(48,32,26,0.10)]"
-                    >
-                        <div
-                            aria-hidden="true"
-                            className="absolute -left-12 -top-12 size-36 rounded-full opacity-20 blur-2xl transition group-hover:scale-125"
-                            style={{
-                                backgroundColor: category.accentColor || "#c8793f",
-                            }}
-                        />
+            <div className="flex gap-3 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {categories.map((category) => {
+                    const isShop = category.catalogType === "shop";
+                    const Icon = isShop ? FiShoppingBag : FiCoffee;
+                    const href = `${isShop ? "/shop" : "/menu"}?category=${encodeURIComponent(category.slug)}`;
 
-                        <div className="relative flex items-start justify-between gap-4">
-                            <div
-                                className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl"
-                                style={{
-                                    backgroundColor: `${category.accentColor || "#c8793f"}18`,
-                                }}
-                            >
-                                {category.image ? (
-                                    <img
-                                        src={category.image}
-                                        alt={category.imageAlt || category.title}
-                                        className="size-full object-contain p-2"
-                                    />
-                                ) : (
-                                    <FiCoffee
-                                        size={24}
-                                        style={{
-                                            color: category.accentColor || "#c8793f",
-                                        }}
-                                    />
-                                )}
-                            </div>
-
-                            <span className="flex size-9 items-center justify-center rounded-xl bg-cream-50 text-coffee-400 transition group-hover:bg-coffee-900 group-hover:text-white">
-                                <FiArrowLeft className="text-current" />
+                    return (
+                        <Link key={category._id || category.slug} href={href} className="group flex min-w-[210px] items-center gap-4 rounded-2xl border border-coffee-100 bg-white px-4 py-4 shadow-[0_8px_30px_rgba(48,32,26,0.04)] transition hover:-translate-y-0.5 hover:border-caramel-200 hover:shadow-[0_16px_40px_rgba(48,32,26,0.08)]">
+                            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-cream-100 text-coffee-700 transition group-hover:bg-coffee-900 group-hover:text-white">
+                                <Icon />
                             </span>
-                        </div>
-
-                        <div className="relative mt-8">
-                            <h3 className="text-lg font-black text-coffee-950">{category.title}</h3>
-
-                            <p className="mt-2 line-clamp-2 min-h-12 text-xs leading-6 text-coffee-400">
-                                {category.description || `محصولات دسته ${category.title} ممد کافی`}
-                            </p>
-
-                            <p className="mt-5 text-xs font-black text-caramel-600">
-                                {category.productCount.toLocaleString("fa-IR")} محصول
-                            </p>
-                        </div>
-                    </Link>
-                ))}
+                            <span className="min-w-0 flex-1">
+                                <span className="block truncate text-sm font-black text-coffee-950">{category.title}</span>
+                                <span className="mt-1 block text-[10px] font-bold text-coffee-400">
+                                    {isShop ? "فروشگاه" : "منوی کافه"} · {(Number(category.productCount) || 0).toLocaleString("fa-IR")} آیتم
+                                </span>
+                            </span>
+                            <FiArrowLeft className="shrink-0 text-coffee-300 transition group-hover:-translate-x-1 group-hover:text-caramel-600" />
+                        </Link>
+                    );
+                })}
             </div>
         </section>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 const StoreContext = createContext(null);
 
@@ -9,6 +9,7 @@ const CART_STORAGE_KEY = "mmd-coffee-cart-v2";
 const WISHLIST_STORAGE_KEY = "mmd-coffee-wishlist-v2";
 
 const objectIdPattern = /^[a-f\d]{24}$/i;
+const shopCategorySlugs = new Set(["coffee-beans", "brewing-tools", "accessories", "gift-boxes"]);
 
 function toStringId(value) {
     if (!value) {
@@ -54,6 +55,25 @@ function getDiscountedPrice(product) {
     const discountPercent = Number(product?.discountPercent ?? product?.discount) || 0;
 
     return Math.round(price * (1 - Math.min(Math.max(discountPercent, 0), 100) / 100));
+}
+
+function getCatalogType(product) {
+    const explicit = String(product?.catalogType || "").trim().toLowerCase();
+
+    if (explicit === "shop" || explicit === "cafe") {
+        return explicit;
+    }
+
+    if (product?.detailBasePath === "/shop") {
+        return "shop";
+    }
+
+    const categorySlug = String(product?.categorySlug || product?.category?.slug || "").trim().toLowerCase();
+    if (shopCategorySlugs.has(categorySlug)) {
+        return "shop";
+    }
+
+    return "cafe";
 }
 
 function createCartKey({ productId, slug, variantId, addOnIds }) {
@@ -130,6 +150,13 @@ function normalizeStoredCartItem(item) {
 
         image: source.image || "",
 
+        categorySlug:
+            source.categorySlug || source.category?.slug || "",
+
+        detailBasePath: source.detailBasePath || "",
+
+        catalogType: getCatalogType(source),
+
         price: Number(source.price) || 0,
 
         discountPercent: Number(source.discountPercent ?? source.discount) || 0,
@@ -166,6 +193,14 @@ export function StoreProvider({ children }) {
 
     const [isHydrated, setIsHydrated] = useState(false);
 
+    const [hasDatabaseProfile, setHasDatabaseProfile] = useState(false);
+    const [preferencesReady, setPreferencesReady] = useState(false);
+    const databaseProfileRef = useRef(false);
+    const databaseCartReadyRef = useRef(false);
+    const cartSyncTimerRef = useRef(null);
+    const cartItemsRef = useRef([]);
+    const wishlistItemsRef = useRef([]);
+
     useEffect(() => {
         const storedCart = readStoredArray(CART_STORAGE_KEY)
             .map(normalizeStoredCartItem)
@@ -179,20 +214,204 @@ export function StoreProvider({ children }) {
     }, []);
 
     useEffect(() => {
-        if (!isHydrated) {
+        cartItemsRef.current = cartItems;
+    }, [cartItems]);
+
+    useEffect(() => {
+        wishlistItemsRef.current = wishlistItems;
+    }, [wishlistItems]);
+
+    const syncPreferencesFromDatabase = async () => {
+        try {
+            const response = await fetch("/api/user/preferences", {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+            });
+
+            const payload = await response.json().catch(() => ({}));
+
+            if (!response.ok || !payload?.authenticated) {
+                if (databaseProfileRef.current) {
+                    setWishlistItems([]);
+                    setCartItems([]);
+                    wishlistItemsRef.current = [];
+                    cartItemsRef.current = [];
+                }
+                databaseProfileRef.current = false;
+                databaseCartReadyRef.current = false;
+                setHasDatabaseProfile(false);
+                setPreferencesReady(true);
+                return;
+            }
+
+            databaseProfileRef.current = true;
+
+            const localWishlistIds = wishlistItemsRef.current
+                .map((item) => getProductIdentity(item).productId)
+                .filter(Boolean);
+
+            let nextWishlist = Array.isArray(payload?.data?.wishlist)
+                ? payload.data.wishlist
+                : [];
+
+            if (localWishlistIds.length) {
+                const syncResponse = await fetch("/api/user/preferences", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "sync_wishlist",
+                        productIds: localWishlistIds,
+                    }),
+                });
+
+                const syncPayload = await syncResponse.json().catch(() => ({}));
+                if (syncResponse.ok && Array.isArray(syncPayload?.data?.wishlist)) {
+                    nextWishlist = syncPayload.data.wishlist;
+                }
+            }
+
+            const localCart = cartItemsRef.current
+                .filter((item) => item.productId)
+                .map((item) => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    variantId: item.variant?.id || "",
+                    addOnIds: item.addOns.map((addOn) => addOn.id),
+                }));
+
+            let cartResponse;
+            if (localCart.length) {
+                cartResponse = await fetch("/api/user/cart", {
+                    method: "PUT",
+                    credentials: "include",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ mode: "merge", items: localCart }),
+                });
+            } else {
+                cartResponse = await fetch("/api/user/cart", {
+                    method: "GET",
+                    credentials: "include",
+                    cache: "no-store",
+                });
+            }
+
+            const cartPayload = await cartResponse.json().catch(() => ({}));
+            if (!cartResponse.ok || !Array.isArray(cartPayload?.data?.cart)) {
+                throw new Error(cartPayload?.message || "دریافت سبد دیتابیس انجام نشد");
+            }
+
+            const databaseCart = cartPayload.data.cart
+                .map(normalizeStoredCartItem)
+                .filter(Boolean);
+
+            setWishlistItems(nextWishlist);
+            setCartItems(databaseCart);
+            wishlistItemsRef.current = nextWishlist;
+            cartItemsRef.current = databaseCart;
+            databaseCartReadyRef.current = true;
+            setHasDatabaseProfile(true);
+
+            try {
+                window.localStorage.removeItem(CART_STORAGE_KEY);
+                window.localStorage.removeItem(WISHLIST_STORAGE_KEY);
+            } catch {}
+        } catch (error) {
+            console.error("SYNC USER DATABASE STATE ERROR:", error);
+        } finally {
+            setPreferencesReady(true);
+        }
+    };
+
+    useEffect(() => {
+        if (!isHydrated) return undefined;
+
+        syncPreferencesFromDatabase();
+
+        const handleAuthChanged = () => {
+            setPreferencesReady(false);
+            databaseCartReadyRef.current = false;
+            syncPreferencesFromDatabase();
+        };
+
+        window.addEventListener("mmd-auth-changed", handleAuthChanged);
+        return () => window.removeEventListener("mmd-auth-changed", handleAuthChanged);
+        // فقط بعد از Hydrate اولیه اجرا می‌شود؛ wishlist محلی داخل تابع Merge می‌شود.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isHydrated]);
+
+    const recordInteraction = (product, event = "view") => {
+        const { productId } = getProductIdentity(product);
+        if (!hasDatabaseProfile || !productId) return;
+
+        fetch("/api/user/preferences", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                action: "record",
+                productId,
+                event,
+            }),
+        }).catch(() => {});
+    };
+
+    useEffect(() => {
+        if (!isHydrated) return;
+
+        if (hasDatabaseProfile) {
+            window.localStorage.removeItem(CART_STORAGE_KEY);
             return;
         }
 
         window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
-    }, [cartItems, isHydrated]);
+    }, [cartItems, hasDatabaseProfile, isHydrated]);
 
     useEffect(() => {
-        if (!isHydrated) {
+        if (!isHydrated) return;
+
+        if (hasDatabaseProfile) {
+            window.localStorage.removeItem(WISHLIST_STORAGE_KEY);
             return;
         }
 
         window.localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistItems));
-    }, [wishlistItems, isHydrated]);
+    }, [wishlistItems, hasDatabaseProfile, isHydrated]);
+
+    useEffect(() => {
+        if (!isHydrated || !hasDatabaseProfile || !preferencesReady || !databaseCartReadyRef.current) {
+            return undefined;
+        }
+
+        if (cartSyncTimerRef.current) {
+            window.clearTimeout(cartSyncTimerRef.current);
+        }
+
+        cartSyncTimerRef.current = window.setTimeout(() => {
+            const items = cartItemsRef.current
+                .filter((item) => item.productId)
+                .map((item) => ({
+                    productId: item.productId,
+                    quantity: item.quantity,
+                    variantId: item.variant?.id || "",
+                    addOnIds: item.addOns.map((addOn) => addOn.id),
+                }));
+
+            fetch("/api/user/cart", {
+                method: "PUT",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ mode: "replace", items }),
+            }).catch(() => {});
+        }, 220);
+
+        return () => {
+            if (cartSyncTimerRef.current) {
+                window.clearTimeout(cartSyncTimerRef.current);
+            }
+        };
+    }, [cartItems, hasDatabaseProfile, isHydrated, preferencesReady]);
 
     const addToCart = (product, options = {}) => {
         const normalizedOptions =
@@ -283,6 +502,18 @@ export function StoreProvider({ children }) {
 
                     image: product.image || "",
 
+                    categorySlug:
+                        product.categorySlug || product.category?.slug || "",
+
+                    detailBasePath:
+                        normalizedOptions.detailBasePath || product.detailBasePath || "",
+
+                    catalogType: getCatalogType({
+                        ...product,
+                        detailBasePath:
+                            normalizedOptions.detailBasePath || product.detailBasePath || "",
+                    }),
+
                     price: Number(product.price) || 0,
 
                     discountPercent: Number(product.discountPercent ?? product.discount) || 0,
@@ -294,6 +525,7 @@ export function StoreProvider({ children }) {
             ];
         });
 
+        recordInteraction(product, "cart");
         setIsCartOpen(true);
 
         return true;
@@ -354,29 +586,37 @@ export function StoreProvider({ children }) {
     const clearCart = () => {
         setCartItems([]);
         setIsCartOpen(false);
+
+        if (hasDatabaseProfile) {
+            fetch("/api/user/cart", {
+                method: "DELETE",
+                credentials: "include",
+            }).catch(() => {});
+        }
     };
 
     const toggleWishlist = (product) => {
         const { productId, slug } = getProductIdentity(product);
-
         const identity = productId || slug;
 
-        if (!identity) {
-            return;
-        }
+        if (!identity) return false;
+
+        let nextAdded = false;
 
         setWishlistItems((currentItems) => {
             const exists = currentItems.some((item) => {
                 const itemIdentity = getProductIdentity(item);
-
-                return itemIdentity.productId === productId && itemIdentity.slug === slug;
+                return (productId && itemIdentity.productId === productId) ||
+                    (!productId && slug && itemIdentity.slug === slug);
             });
+
+            nextAdded = !exists;
 
             if (exists) {
                 return currentItems.filter((item) => {
                     const itemIdentity = getProductIdentity(item);
-
-                    return !(itemIdentity.productId === productId && itemIdentity.slug === slug);
+                    return !((productId && itemIdentity.productId === productId) ||
+                        (!productId && slug && itemIdentity.slug === slug));
                 });
             }
 
@@ -388,6 +628,24 @@ export function StoreProvider({ children }) {
                 },
             ];
         });
+
+        if (productId) {
+            fetch("/api/user/preferences", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "toggle_wishlist", productId }),
+            })
+                .then(async (response) => {
+                    const payload = await response.json().catch(() => ({}));
+                    if (response.ok && Array.isArray(payload?.data?.wishlist)) {
+                        setWishlistItems(payload.data.wishlist);
+                    }
+                })
+                .catch(() => {});
+        }
+
+        return nextAdded;
     };
 
     const isInWishlist = (product) => {
@@ -424,6 +682,60 @@ export function StoreProvider({ children }) {
         [cartItems],
     );
 
+    const cafeCartItems = useMemo(
+        () => cartItems.filter((item) => getCatalogType(item) === "cafe"),
+        [cartItems],
+    );
+
+    const shopCartItems = useMemo(
+        () => cartItems.filter((item) => getCatalogType(item) === "shop"),
+        [cartItems],
+    );
+
+    const getCheckoutItems = (catalogType) =>
+        cartItems
+            .filter((item) => !catalogType || getCatalogType(item) === catalogType)
+            .map((item) => ({
+                productId: item.productId || item.slug,
+                slug: item.slug,
+                quantity: item.quantity,
+                variantId: item.variant?.id || "",
+                addOnIds: item.addOns.map((addOn) => addOn.id),
+            }));
+
+    const clearCartType = (catalogType) => {
+        setCartItems((currentItems) =>
+            currentItems.filter((item) => getCatalogType(item) !== catalogType),
+        );
+        setIsCartOpen(false);
+    };
+
+    const subtotalsByType = useMemo(() => {
+        const calculate = (items) =>
+            items.reduce((total, item) => {
+                const basePrice = getDiscountedPrice(item);
+                const variantPrice = Number(item.variant?.priceAdjustment) || 0;
+                const addOnsPrice = item.addOns.reduce(
+                    (sum, addOn) => sum + (Number(addOn.price) || 0),
+                    0,
+                );
+                return total + (basePrice + variantPrice + addOnsPrice) * item.quantity;
+            }, 0);
+
+        return {
+            cafe: calculate(cafeCartItems),
+            shop: calculate(shopCartItems),
+        };
+    }, [cafeCartItems, shopCartItems]);
+
+    const cartCountsByType = useMemo(
+        () => ({
+            cafe: cafeCartItems.reduce((sum, item) => sum + item.quantity, 0),
+            shop: shopCartItems.reduce((sum, item) => sum + item.quantity, 0),
+        }),
+        [cafeCartItems, shopCartItems],
+    );
+
     const checkoutItems = useMemo(
         () =>
             cartItems.map((item) => ({
@@ -439,13 +751,67 @@ export function StoreProvider({ children }) {
             })),
         [cartItems],
     );
-    const getCartItemQuantity = (identifier) => {
-        const item = cartItems.find(
-            (item) =>
-                item.id === identifier || item.productId === identifier || item.key === identifier,
-        );
+    const getCartItemQuantity = (productOrIdentifier) => {
+        const identifier =
+            typeof productOrIdentifier === "string"
+                ? productOrIdentifier.trim()
+                : "";
 
-        return item ? item.quantity : 0;
+        const identity =
+            typeof productOrIdentifier === "object" && productOrIdentifier
+                ? getProductIdentity(productOrIdentifier)
+                : {
+                      productId: objectIdPattern.test(identifier) ? identifier : "",
+                      slug: objectIdPattern.test(identifier)
+                          ? ""
+                          : identifier.toLowerCase(),
+                  };
+
+        return cartItems.reduce((total, item) => {
+            const matches =
+                (identifier && (item.key === identifier || item.id === identifier)) ||
+                (identity.productId && item.productId === identity.productId) ||
+                (identity.slug && item.slug === identity.slug);
+
+            return matches ? total + item.quantity : total;
+        }, 0);
+    };
+
+    const changeProductQuantity = (product, direction) => {
+        const identity = getProductIdentity(product);
+
+        setCartItems((currentItems) => {
+            const matchingIndex = currentItems.findIndex((item) =>
+                (identity.productId && item.productId === identity.productId) ||
+                (identity.slug && item.slug === identity.slug),
+            );
+
+            if (matchingIndex === -1) {
+                return currentItems;
+            }
+
+            return currentItems
+                .map((item, index) =>
+                    index === matchingIndex
+                        ? { ...item, quantity: item.quantity + direction }
+                        : item,
+                )
+                .filter((item) => item.quantity > 0);
+        });
+    };
+
+    const incrementProductQuantity = (product) => changeProductQuantity(product, 1);
+    const decrementProductQuantity = (product) => changeProductQuantity(product, -1);
+
+    const clearWishlist = () => {
+        setWishlistItems([]);
+
+        if (hasDatabaseProfile) {
+            fetch("/api/user/preferences", {
+                method: "DELETE",
+                credentials: "include",
+            }).catch(() => {});
+        }
     };
 
     const value = {
@@ -455,24 +821,40 @@ export function StoreProvider({ children }) {
         cart: cartItems,
         cartCount,
         subtotal,
+        cartSubtotal: subtotal,
         cartTotal: subtotal,
 
         addToCart,
         updateQuantity,
         incrementQuantity,
+        increaseQuantity: incrementQuantity,
         decrementQuantity,
+        decreaseQuantity: decrementQuantity,
         removeFromCart,
         removeItemFromCart: removeFromCart,
         clearCart,
         getCartItemQuantity,
+        incrementProductQuantity,
+        decrementProductQuantity,
 
         checkoutItems,
+        getCheckoutItems,
+        clearCartType,
+        cafeCartItems,
+        shopCartItems,
+        subtotalsByType,
+        cartCountsByType,
 
         wishlistItems,
         wishlist: wishlistItems,
         wishlistCount,
         toggleWishlist,
         isInWishlist,
+        clearWishlist,
+        hasDatabaseProfile,
+        preferencesReady,
+        recordInteraction,
+        syncPreferencesFromDatabase,
 
         isCartOpen,
 

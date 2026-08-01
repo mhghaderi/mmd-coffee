@@ -1,6 +1,5 @@
 import MenuCatalog from "@/components/menu/MenuCatalog";
-
-import getPublicCatalog from "@/lib/catalog/getPublicCatalog";
+import getMenuCatalog from "@/lib/catalog/getMenuCatalog";
 
 export const dynamic = "force-dynamic";
 
@@ -11,16 +10,7 @@ export const metadata = {
 
 export default async function MenuPage({ searchParams }) {
     const resolvedSearchParams = await searchParams;
-
-    let data;
-
-    try {
-        data = await getPublicCatalog(resolvedSearchParams);
-    } catch (error) {
-        console.log("MENU ERROR => ", error);
-
-        throw error;
-    }
+    const data = await getMenuCatalog(resolvedSearchParams);
 
     return (
         <main className="page-container py-10 sm:py-14">
@@ -34,7 +24,7 @@ export default async function MenuPage({ searchParams }) {
                         </h1>
 
                         <p className="mt-3 max-w-2xl text-sm leading-8 text-coffee-500">
-                            محصولات موجود مستقیماً از منوی فعال ممد کافی نمایش داده می‌شوند.
+                            نوشیدنی‌ها، دسرها و آیتم‌های فعال کافه مستقیماً از منوی ممد کافی نمایش داده می‌شوند.
                         </p>
                     </div>
 

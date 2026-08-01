@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Brazil Santos</title><desc id="desc">MMD Coffee product illustration</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf3"/><stop offset="1" stop-color="#8e5b3d" stop-opacity=".25"/></linearGradient><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#2f211b" flood-opacity=".16"/></filter></defs>
+<rect width="512" height="512" rx="92" fill="url(#bg)"/>
+<circle cx="410" cy="102" r="66" fill="#8e5b3d" opacity=".12"/><circle cx="91" cy="410" r="92" fill="#8e5b3d" opacity=".10"/>
+<g filter="url(#shadow)"><path d="M180 120h152l18 48v224c0 18-14 32-32 32H194c-18 0-32-14-32-32V168l18-48Z" fill="#fffaf3" stroke="#2f211b" stroke-width="10"/><path d="M180 168h170" stroke="#2f211b" stroke-width="10"/><ellipse cx="256" cy="282" rx="42" ry="64" fill="#8e5b3d" transform="rotate(22 256 282)"/><path d="M247 224c21 31 20 78-7 119" fill="none" stroke="#2f211b" stroke-width="8" stroke-linecap="round"/></g>
+<text x="256" y="458" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#2f211b">BRAZIL</text>
+<text x="256" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-weight="600" font-size="16" fill="#7b5a49">SANTOS</text>
+</svg>

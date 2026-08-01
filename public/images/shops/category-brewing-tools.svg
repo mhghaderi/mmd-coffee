@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Brewing Tools</title><desc id="desc">MMD Coffee product illustration</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf3"/><stop offset="1" stop-color="#c8793f" stop-opacity=".25"/></linearGradient><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#2f211b" flood-opacity=".16"/></filter></defs>
+<rect width="512" height="512" rx="92" fill="url(#bg)"/>
+<circle cx="410" cy="102" r="66" fill="#c8793f" opacity=".12"/><circle cx="91" cy="410" r="92" fill="#c8793f" opacity=".10"/>
+<g filter="url(#shadow)"><path d="M155 150h202l-68 174h-66l-68-174Z" fill="#fffaf3" stroke="#2f211b" stroke-width="11" stroke-linejoin="round"/><path d="M193 192h126M207 230h98M222 268h68" stroke="#c8793f" stroke-width="10" stroke-linecap="round"/><path d="M215 326h82v24h-82z" fill="#2f211b"/><path d="M172 350h168" stroke="#2f211b" stroke-width="13" stroke-linecap="round"/></g>
+<text x="256" y="458" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#2f211b">BREWING</text>
+<text x="256" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-weight="600" font-size="16" fill="#7b5a49">TOOLS</text>
+</svg>

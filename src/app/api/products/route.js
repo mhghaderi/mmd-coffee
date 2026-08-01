@@ -424,6 +424,7 @@ export async function POST(request) {
             englishName,
             slug,
             category: categoryId,
+            catalogType: category.catalogType === "shop" ? "shop" : "cafe",
             shortDescription,
             description,
             price,

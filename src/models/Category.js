@@ -29,6 +29,16 @@ const categorySchema = new mongoose.Schema(
             default: "",
         },
 
+        catalogType: {
+            type: String,
+            enum: {
+                values: ["cafe", "shop"],
+                message: "نوع کاتالوگ دسته‌بندی معتبر نیست",
+            },
+            default: "cafe",
+            index: true,
+        },
+
         image: {
             type: String,
             trim: true,

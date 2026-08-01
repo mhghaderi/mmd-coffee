@@ -649,11 +649,11 @@ export async function PATCH(request, { params }) {
                 );
             }
 
-            const categoryExists = await Category.exists({
-                _id: update.category,
-            });
+            const categoryDocument = await Category.findById(update.category)
+                .select("_id catalogType")
+                .lean();
 
-            if (!categoryExists) {
+            if (!categoryDocument) {
                 return Response.json(
                     {
                         success: false,
@@ -664,6 +664,8 @@ export async function PATCH(request, { params }) {
                     },
                 );
             }
+
+            update.catalogType = categoryDocument.catalogType === "shop" ? "shop" : "cafe";
         }
 
         if (update.slug) {

@@ -1,0 +1,339 @@
+.shell {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(91, 63, 49, 0.10);
+    border-radius: 2rem;
+    background:
+        linear-gradient(135deg, rgba(255,255,255,.92), rgba(250,244,235,.96));
+    padding: 2rem 1.25rem 1.35rem;
+    box-shadow: 0 22px 70px rgba(48, 32, 26, 0.07);
+    isolation: isolate;
+}
+
+.glowOne,
+.glowTwo {
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 999px;
+    filter: blur(70px);
+}
+
+.glowOne {
+    top: -120px;
+    left: -100px;
+    width: 320px;
+    height: 320px;
+    background: rgba(210, 157, 104, 0.18);
+}
+
+.glowTwo {
+    right: -120px;
+    bottom: -160px;
+    width: 360px;
+    height: 360px;
+    background: rgba(92, 66, 52, 0.09);
+}
+
+.header {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1.25rem;
+    margin-bottom: 1.6rem;
+}
+
+.headingGroup {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.iconBox {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+    border-radius: 17px;
+    color: #e3b074;
+    background: #30211b;
+    box-shadow: 0 12px 28px rgba(48, 33, 27, 0.17);
+}
+
+.eyebrowRow {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .55rem;
+}
+
+.eyebrow {
+    font-size: .75rem;
+    font-weight: 800;
+    color: #b76b38;
+}
+
+.liveBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    min-height: 26px;
+    padding: 0 .65rem;
+    border-radius: 999px;
+    background: rgba(183, 107, 56, 0.09);
+    color: #8f4f28;
+    font-size: .66rem;
+    font-weight: 800;
+}
+
+.title {
+    margin-top: .45rem;
+    color: #261a16;
+    font-size: clamp(1.45rem, 2.3vw, 2rem);
+    font-weight: 950;
+    line-height: 1.5;
+}
+
+.description {
+    max-width: 690px;
+    margin-top: .45rem;
+    color: rgba(73, 52, 43, .66);
+    font-size: .86rem;
+    line-height: 2;
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    flex: 0 0 auto;
+}
+
+.navButton,
+.refreshButton {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid rgba(76, 53, 43, .10);
+    border-radius: 14px;
+    background: rgba(255,255,255,.88);
+    color: #5d453a;
+    box-shadow: 0 8px 22px rgba(48,32,26,.06);
+    transition: transform .22s ease, box-shadow .22s ease, background .22s ease;
+}
+
+.navButton:hover,
+.refreshButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 27px rgba(48,32,26,.10);
+}
+
+.navButtonPrimary {
+    border-color: #30211b;
+    background: #30211b;
+    color: white;
+}
+
+.sliderWrap {
+    position: relative;
+}
+
+.slide {
+    height: auto !important;
+}
+
+.cardWrap {
+    height: 100%;
+    padding: 2px 0 8px;
+}
+
+/* Swiper's structural CSS, kept local so the component works even without importing swiper/css globally. */
+:global(.mmd-recommendations-swiper) {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    padding: 4px 2px 10px;
+}
+
+:global(.mmd-recommendations-swiper .swiper-wrapper) {
+    position: relative;
+    display: flex;
+    box-sizing: content-box;
+    width: 100%;
+    height: 100%;
+    transition-property: transform;
+    transition-timing-function: ease;
+    will-change: transform;
+}
+
+:global(.mmd-recommendations-swiper .swiper-slide) {
+    position: relative;
+    display: block;
+    flex-shrink: 0;
+    width: 100%;
+    height: auto;
+}
+
+.edgeRight,
+.edgeLeft {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    bottom: 36px;
+    width: 30px;
+    pointer-events: none;
+}
+
+.edgeRight {
+    right: -2px;
+    background: linear-gradient(to left, rgba(250,244,235,.80), transparent);
+}
+
+.edgeLeft {
+    left: -2px;
+    background: linear-gradient(to right, rgba(250,244,235,.80), transparent);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 24px;
+    margin-top: .75rem;
+}
+
+:global(.mmd-rec-pagination .swiper-pagination-bullet) {
+    width: 7px;
+    height: 7px;
+    margin: 0 4px !important;
+    border-radius: 999px;
+    background: rgba(69, 48, 40, .22);
+    opacity: 1;
+    cursor: pointer;
+    transition: width .25s ease, background .25s ease;
+}
+
+:global(.mmd-rec-pagination .swiper-pagination-bullet-active) {
+    width: 26px;
+    background: #30211b;
+}
+
+:global(.swiper-button-disabled) {
+    opacity: .35;
+    cursor: default;
+}
+
+.skeletonGrid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 1.15rem;
+}
+
+.skeleton {
+    height: 390px;
+    border-radius: 1.7rem;
+    background: linear-gradient(90deg, #f5eee6 25%, #fff 50%, #f5eee6 75%);
+    background-size: 220% 100%;
+    animation: shimmer 1.4s linear infinite;
+}
+
+.bottomNote {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .45rem;
+    margin-top: .4rem;
+    color: rgba(73,52,43,.54);
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #b76b38;
+    box-shadow: 0 0 0 4px rgba(183,107,56,.10);
+}
+
+@keyframes shimmer {
+    from { background-position: 100% 0; }
+    to { background-position: -100% 0; }
+}
+
+@media (max-width: 900px) {
+    .header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .actions {
+        align-self: flex-end;
+    }
+
+    .skeletonGrid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .shell {
+        border-radius: 1.65rem;
+        padding: 1.35rem .85rem 1rem;
+    }
+
+    .headingGroup {
+        gap: .75rem;
+    }
+
+    .iconBox {
+        width: 46px;
+        height: 46px;
+        flex-basis: 46px;
+        border-radius: 15px;
+    }
+
+    .description {
+        font-size: .78rem;
+    }
+
+    .actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .edgeRight,
+    .edgeLeft {
+        display: none;
+    }
+
+    .skeletonGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .skeleton:nth-child(n+2) {
+        display: none;
+    }
+
+    .bottomNote {
+        text-align: center;
+        line-height: 1.8;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    :global(.mmd-recommendations-swiper .swiper-wrapper),
+    .navButton,
+    .refreshButton {
+        transition-duration: 0.01ms !important;
+    }
+
+    .skeleton {
+        animation: none;
+    }
+}

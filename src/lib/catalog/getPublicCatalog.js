@@ -1,9 +1,15 @@
-import mongoose from "mongoose";
-
 import connectToDB from "@/lib/db/connectToDB";
 
 import Category from "@/models/Category";
 import Product from "@/models/Product";
+
+import {
+    CAFE_CATEGORY_SLUGS,
+    CATALOG_TYPE,
+    SHOP_CATEGORY_SLUGS,
+    inferCatalogTypeFromCategorySlug,
+    normalizeCatalogType,
+} from "@/constants/catalog";
 
 import {
     serializeCatalogCategory,
@@ -12,43 +18,19 @@ import {
 
 const SORT_OPTIONS = {
     popular: {
-        isFeatured: -1,
         popularityScore: -1,
         salesCount: -1,
-        createdAt: -1,
-        _id: -1,
-    },
-
-    newest: {
-        createdAt: -1,
-        _id: -1,
-    },
-
-    oldest: {
-        createdAt: 1,
-        _id: 1,
-    },
-
-    rating: {
         ratingAverage: -1,
-        reviewsCount: -1,
+        isFeatured: -1,
         createdAt: -1,
+        _id: -1,
     },
-
-    "price-asc": {
-        finalPrice: 1,
-        createdAt: -1,
-    },
-
-    "price-desc": {
-        finalPrice: -1,
-        createdAt: -1,
-    },
-
-    name: {
-        displayOrder: 1,
-        name: 1,
-    },
+    newest: { createdAt: -1, _id: -1 },
+    oldest: { createdAt: 1, _id: 1 },
+    rating: { ratingAverage: -1, reviewsCount: -1, createdAt: -1 },
+    "price-asc": { finalPrice: 1, createdAt: -1 },
+    "price-desc": { finalPrice: -1, createdAt: -1 },
+    name: { displayOrder: 1, name: 1 },
 };
 
 function firstValue(value) {
@@ -60,25 +42,17 @@ function normalizeText(value) {
 }
 
 function normalizeBoolean(value) {
-    const normalized = normalizeText(value).toLowerCase();
-
-    return ["true", "1", "yes", "on"].includes(normalized);
+    return ["true", "1", "yes", "on"].includes(normalizeText(value).toLowerCase());
 }
 
 function normalizePage(value) {
     const parsed = Number.parseInt(normalizeText(value) || "1", 10);
-
     return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 }
 
 function normalizeLimit(value) {
     const parsed = Number.parseInt(normalizeText(value) || "12", 10);
-
-    if (!Number.isFinite(parsed)) {
-        return 12;
-    }
-
-    return Math.min(Math.max(parsed, 4), 48);
+    return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 4), 48) : 12;
 }
 
 function normalizePrice(value) {
@@ -89,7 +63,6 @@ function normalizePrice(value) {
     }
 
     const parsed = Number(normalized);
-
     return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
@@ -97,79 +70,94 @@ function escapeRegExp(value) {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-async function getActiveCategories() {
-    /*
-    archivedAt: null اسناد قدیمی که این فیلد
-    را ندارند نیز پوشش می‌دهد.
-  */
+function createCatalogTypeMatch(catalogType) {
+    const normalizedType = normalizeCatalogType(catalogType);
 
-    const categories = await Category.aggregate([
-        {
-            $match: {
-                archivedAt: null,
+    if (!normalizedType) {
+        return null;
+    }
 
-                $or: [
+    const fallbackSlugs =
+        normalizedType === CATALOG_TYPE.SHOP
+            ? SHOP_CATEGORY_SLUGS
+            : CAFE_CATEGORY_SLUGS;
+
+    return {
+        $or: [
+            { catalogType: normalizedType },
+            {
+                $and: [
                     {
-                        isActive: true,
+                        $or: [
+                            { catalogType: { $exists: false } },
+                            { catalogType: null },
+                            { catalogType: "" },
+                        ],
                     },
-                    {
-                        isActive: {
-                            $exists: false,
-                        },
-                    },
+                    { slug: { $in: fallbackSlugs } },
                 ],
             },
-        },
+        ],
+    };
+}
 
+async function getActiveCategories(options = {}) {
+    const categoryMatch = {
+        archivedAt: null,
+        $and: [
+            {
+                $or: [
+                    { isActive: true },
+                    { isActive: { $exists: false } },
+                ],
+            },
+        ],
+    };
+
+    const catalogTypeMatch = createCatalogTypeMatch(options.catalogType);
+
+    if (catalogTypeMatch) {
+        categoryMatch.$and.push(catalogTypeMatch);
+    }
+
+    if (Array.isArray(options.allowedCategorySlugs) && options.allowedCategorySlugs.length > 0) {
+        categoryMatch.$and.push({ slug: { $in: options.allowedCategorySlugs } });
+    }
+
+    if (Array.isArray(options.excludedCategorySlugs) && options.excludedCategorySlugs.length > 0) {
+        categoryMatch.$and.push({ slug: { $nin: options.excludedCategorySlugs } });
+    }
+
+    const categories = await Category.aggregate([
+        { $match: categoryMatch },
         {
             $lookup: {
                 from: Product.collection.name,
-
-                let: {
-                    categoryId: "$_id",
-                },
-
+                let: { categoryId: "$_id" },
                 pipeline: [
                     {
                         $match: {
                             $expr: {
                                 $and: [
-                                    {
-                                        $eq: ["$category", "$$categoryId"],
-                                    },
-                                    {
-                                        $eq: ["$status", "published"],
-                                    },
-                                    {
-                                        $eq: ["$isAvailable", true],
-                                    },
+                                    { $eq: ["$category", "$$categoryId"] },
+                                    { $eq: ["$status", "published"] },
+                                    { $eq: ["$isAvailable", true] },
                                 ],
                             },
                         },
                     },
-
-                    {
-                        $count: "value",
-                    },
+                    { $count: "value" },
                 ],
-
                 as: "productCountResult",
             },
         },
-
         {
             $addFields: {
                 productCount: {
-                    $ifNull: [
-                        {
-                            $arrayElemAt: ["$productCountResult.value", 0],
-                        },
-                        0,
-                    ],
+                    $ifNull: [{ $arrayElemAt: ["$productCountResult.value", 0] }, 0],
                 },
             },
         },
-
         {
             $project: {
                 title: 1,
@@ -180,18 +168,19 @@ async function getActiveCategories() {
                 accentColor: 1,
                 displayOrder: 1,
                 productCount: 1,
+                catalogType: 1,
             },
         },
-
-        {
-            $sort: {
-                displayOrder: 1,
-                title: 1,
-            },
-        },
+        { $sort: { displayOrder: 1, title: 1 } },
     ]);
 
-    return categories;
+    return categories.map((category) => ({
+        ...category,
+        catalogType:
+            normalizeCatalogType(category.catalogType) ||
+            inferCatalogTypeFromCategorySlug(category.slug) ||
+            CATALOG_TYPE.CAFE,
+    }));
 }
 
 function createFinalPriceExpression() {
@@ -199,19 +188,13 @@ function createFinalPriceExpression() {
         $round: [
             {
                 $multiply: [
-                    {
-                        $ifNull: ["$price", 0],
-                    },
-
+                    { $ifNull: ["$price", 0] },
                     {
                         $subtract: [
                             1,
-
                             {
                                 $divide: [
-                                    {
-                                        $ifNull: ["$discountPercent", 0],
-                                    },
+                                    { $ifNull: ["$discountPercent", 0] },
                                     100,
                                 ],
                             },
@@ -219,40 +202,53 @@ function createFinalPriceExpression() {
                     },
                 ],
             },
-
             0,
         ],
     };
 }
 
-export default async function getPublicCatalog(rawSearchParams = {}) {
+function decorateCategory(category) {
+    const serialized = serializeCatalogCategory(category);
+    const catalogType =
+        normalizeCatalogType(category.catalogType) ||
+        inferCatalogTypeFromCategorySlug(category.slug) ||
+        CATALOG_TYPE.CAFE;
+
+    return { ...serialized, catalogType };
+}
+
+function decorateProduct(product) {
+    const serialized = serializeCatalogProduct(product);
+    const categorySlug = product.category?.slug || serialized.categorySlug || "";
+    const catalogType =
+        normalizeCatalogType(product.category?.catalogType) ||
+        inferCatalogTypeFromCategorySlug(categorySlug) ||
+        CATALOG_TYPE.CAFE;
+
+    return {
+        ...serialized,
+        catalogType,
+        detailBasePath: catalogType === CATALOG_TYPE.SHOP ? "/shop" : "/menu",
+    };
+}
+
+export default async function getPublicCatalog(rawSearchParams = {}, options = {}) {
     await connectToDB();
 
-    const rawCategories = await getActiveCategories();
-
-    const categories = rawCategories.map(serializeCatalogCategory);
-
+    const rawCategories = await getActiveCategories(options);
+    const categories = rawCategories.map(decorateCategory);
     const activeCategoryIds = rawCategories.map((category) => category._id);
 
     const filters = {
         q: normalizeText(rawSearchParams.q),
-
         category: normalizeText(rawSearchParams.category).toLowerCase(),
-
         sort: normalizeText(rawSearchParams.sort) || "popular",
-
         discounted: normalizeBoolean(rawSearchParams.discounted),
-
         featured: normalizeBoolean(rawSearchParams.featured),
-
         newOnly: normalizeBoolean(rawSearchParams.new),
-
         minPrice: normalizePrice(rawSearchParams.minPrice),
-
         maxPrice: normalizePrice(rawSearchParams.maxPrice),
-
         page: normalizePage(rawSearchParams.page),
-
         limit: normalizeLimit(rawSearchParams.limit),
     };
 
@@ -271,10 +267,8 @@ export default async function getPublicCatalog(rawSearchParams = {}) {
     const productMatch = {
         status: "published",
         isAvailable: true,
-
-        category: {
-            $in: activeCategoryIds,
-        },
+        archivedAt: null,
+        category: { $in: activeCategoryIds },
     };
 
     if (filters.category) {
@@ -284,49 +278,27 @@ export default async function getPublicCatalog(rawSearchParams = {}) {
                 category._id.toString() === filters.category,
         );
 
-        if (selectedCategory) {
-            productMatch.category = selectedCategory._id;
-        } else {
-            /*
-        یک دسته نامعتبر باید نتیجه خالی بدهد،
-        نه تمام محصولات را.
-      */
-
-            productMatch._id = {
-                $exists: false,
-            };
-        }
+        productMatch.category = selectedCategory
+            ? selectedCategory._id
+            : { $in: [] };
     }
 
     if (filters.q) {
         const searchRegex = new RegExp(escapeRegExp(filters.q), "i");
 
         productMatch.$or = [
-            {
-                name: searchRegex,
-            },
-            {
-                englishName: searchRegex,
-            },
-            {
-                slug: searchRegex,
-            },
-            {
-                shortDescription: searchRegex,
-            },
-            {
-                tags: searchRegex,
-            },
-            {
-                ingredients: searchRegex,
-            },
+            { name: searchRegex },
+            { englishName: searchRegex },
+            { slug: searchRegex },
+            { shortDescription: searchRegex },
+            { description: searchRegex },
+            { tags: searchRegex },
+            { ingredients: searchRegex },
         ];
     }
 
     if (filters.discounted) {
-        productMatch.discountPercent = {
-            $gt: 0,
-        };
+        productMatch.discountPercent = { $gt: 0 };
     }
 
     if (filters.featured) {
@@ -338,98 +310,51 @@ export default async function getPublicCatalog(rawSearchParams = {}) {
     }
 
     const sharedPipeline = [
-        {
-            $match: productMatch,
-        },
-
-        {
-            $addFields: {
-                finalPrice: createFinalPriceExpression(),
-            },
-        },
+        { $match: productMatch },
+        { $addFields: { finalPrice: createFinalPriceExpression() } },
     ];
 
     const finalPriceFilter = {};
 
-    if (filters.minPrice !== null) {
-        finalPriceFilter.$gte = filters.minPrice;
-    }
-
-    if (filters.maxPrice !== null) {
-        finalPriceFilter.$lte = filters.maxPrice;
-    }
+    if (filters.minPrice !== null) finalPriceFilter.$gte = filters.minPrice;
+    if (filters.maxPrice !== null) finalPriceFilter.$lte = filters.maxPrice;
 
     if (Object.keys(finalPriceFilter).length > 0) {
-        sharedPipeline.push({
-            $match: {
-                finalPrice: finalPriceFilter,
-            },
-        });
+        sharedPipeline.push({ $match: { finalPrice: finalPriceFilter } });
     }
 
-    const totalResult = await Product.aggregate([
-        ...sharedPipeline,
-
-        {
-            $count: "value",
-        },
-    ]);
-
+    const totalResult = await Product.aggregate([...sharedPipeline, { $count: "value" }]);
     const total = totalResult[0]?.value || 0;
-
     const pages = total === 0 ? 0 : Math.ceil(total / filters.limit);
 
     filters.page = pages > 0 ? Math.min(filters.page, pages) : 1;
 
     const products = await Product.aggregate([
         ...sharedPipeline,
-
         {
             $lookup: {
                 from: Category.collection.name,
-
                 localField: "category",
                 foreignField: "_id",
-
                 as: "category",
             },
         },
-
-        {
-            $unwind: {
-                path: "$category",
-                preserveNullAndEmptyArrays: false,
-            },
-        },
-
-        {
-            $sort: SORT_OPTIONS[filters.sort],
-        },
-
-        {
-            $skip: (filters.page - 1) * filters.limit,
-        },
-
-        {
-            $limit: filters.limit,
-        },
+        { $unwind: { path: "$category", preserveNullAndEmptyArrays: false } },
+        { $sort: SORT_OPTIONS[filters.sort] },
+        { $skip: (filters.page - 1) * filters.limit },
+        { $limit: filters.limit },
     ]);
 
     return {
-        products: products.map(serializeCatalogProduct),
-
+        products: products.map(decorateProduct),
         categories,
-
         filters,
-
         pagination: {
             page: filters.page,
             limit: filters.limit,
             total,
             pages,
-
             hasPreviousPage: filters.page > 1,
-
             hasNextPage: filters.page < pages,
         },
     };

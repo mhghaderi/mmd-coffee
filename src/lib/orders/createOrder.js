@@ -15,8 +15,12 @@ import {
 import connectToDB from "@/lib/db/connectToDB";
 
 import Counter from "@/models/Counter";
+import Category from "@/models/Category";
 import Order from "@/models/Order";
+import OrderContext from "@/models/OrderContext";
 import Product from "@/models/Product";
+import SiteSettings from "@/models/SiteSettings";
+import { inferCatalogTypeFromCategorySlug, normalizeCatalogType } from "@/constants/catalog";
 
 export class OrderServiceError extends Error {
     constructor(message, status = 400, code = "ORDER_ERROR") {
@@ -48,9 +52,37 @@ function validateEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-function getDeliveryFee(method) {
+async function getCommerceSettings() {
+    const settings = await SiteSettings.findOne({ key: "main" })
+        .select("orderSettings features")
+        .lean();
+
+    return {
+        minOrderAmount: Number(settings?.orderSettings?.minOrderAmount) || 0,
+        deliveryFee: Number.isFinite(Number(settings?.orderSettings?.deliveryFee))
+            ? Number(settings.orderSettings.deliveryFee)
+            : null,
+        freeDeliveryThreshold: Number(settings?.orderSettings?.freeDeliveryThreshold) || 0,
+        maxDailyOrders: Number(settings?.orderSettings?.maxDailyOrders) || 0,
+        acceptOrders: settings?.features?.acceptOrders !== false,
+        guestCheckoutEnabled: settings?.features?.guestCheckoutEnabled !== false,
+    };
+}
+
+function getDeliveryFee(method, subtotal, commerceSettings) {
     if (method === DELIVERY_METHOD.PICKUP) {
         return 0;
+    }
+
+    if (
+        commerceSettings.freeDeliveryThreshold > 0 &&
+        subtotal >= commerceSettings.freeDeliveryThreshold
+    ) {
+        return 0;
+    }
+
+    if (Number.isFinite(commerceSettings.deliveryFee) && commerceSettings.deliveryFee >= 0) {
+        return Math.round(commerceSettings.deliveryFee);
     }
 
     const configuredFee = Number(process.env.DELIVERY_FEE);
@@ -174,13 +206,14 @@ function normalizeCustomer(payload, currentUser) {
     };
 }
 
-function normalizeDelivery(payload) {
+function normalizeDelivery(payload, orderContext) {
     const source =
         payload?.delivery && typeof payload.delivery === "object" ? payload.delivery : {};
 
-    const method = DELIVERY_METHOD_VALUES.includes(source.method)
-        ? source.method
-        : DELIVERY_METHOD.PICKUP;
+    const method =
+        orderContext?.catalogType === "shop" && orderContext?.fulfillmentType === "delivery"
+            ? DELIVERY_METHOD.DELIVERY
+            : DELIVERY_METHOD.PICKUP;
 
     const delivery = {
         method,
@@ -197,6 +230,56 @@ function normalizeDelivery(payload) {
     }
 
     return delivery;
+}
+
+function resolveOrderContext(payload, requestedItems, productMap) {
+    const types = new Set();
+
+    for (const requestedItem of requestedItems) {
+        const product = requestedItem.productId
+            ? productMap.get(`id:${requestedItem.productId}`)
+            : productMap.get(`slug:${requestedItem.slug}`);
+
+        if (product?.catalogType) {
+            types.add(product.catalogType);
+        }
+    }
+
+    if (types.size > 1) {
+        throw new OrderServiceError(
+            "سفارش کافه و خرید فروشگاهی باید جداگانه ثبت شوند",
+            409,
+            "MIXED_CATALOG_ORDER",
+        );
+    }
+
+    const catalogType = [...types][0] || "cafe";
+    const requestedType = cleanText(payload?.orderType, 20).toLowerCase();
+
+    if (requestedType && requestedType !== catalogType) {
+        throw new OrderServiceError("نوع سفارش با محصولات سبد خرید هماهنگ نیست", 409, "ORDER_TYPE_MISMATCH");
+    }
+
+    const rawFulfillment = cleanText(payload?.fulfillmentType, 30).toLowerCase();
+
+    if (catalogType === "cafe") {
+        const fulfillmentType = ["dine_in", "takeaway"].includes(rawFulfillment)
+            ? rawFulfillment
+            : "dine_in";
+        const tableNumber = cleanText(payload?.tableNumber, 30);
+
+        if (fulfillmentType === "dine_in" && !tableNumber) {
+            throw new OrderServiceError("برای سفارش داخل کافه شماره میز را وارد کن", 400, "TABLE_REQUIRED");
+        }
+
+        return { catalogType, fulfillmentType, tableNumber };
+    }
+
+    const fulfillmentType = ["delivery", "pickup"].includes(rawFulfillment)
+        ? rawFulfillment
+        : "pickup";
+
+    return { catalogType, fulfillmentType, tableNumber: "" };
 }
 
 function normalizePaymentMethod(payload) {
@@ -271,7 +354,7 @@ async function loadProducts(requestedItems, session = null) {
         ],
     })
         .select(
-            "name englishName slug image price discountPercent variants addOns trackStock stock isAvailable status",
+            "name englishName slug image price discountPercent variants addOns trackStock stock isAvailable status category",
         )
         .lean();
 
@@ -280,6 +363,30 @@ async function loadProducts(requestedItems, session = null) {
     }
 
     const products = await query;
+
+    const categoryIds = [
+        ...new Set(products.map((product) => product.category?.toString()).filter(Boolean)),
+    ].map((id) => new mongoose.Types.ObjectId(id));
+
+    const categoryRows = categoryIds.length
+        ? await Category.aggregate([
+              { $match: { _id: { $in: categoryIds } } },
+              { $project: { slug: 1, catalogType: 1 } },
+          ])
+        : [];
+
+    const categoryMap = new Map(
+        categoryRows.map((category) => [
+            category._id.toString(),
+            normalizeCatalogType(category.catalogType) ||
+                inferCatalogTypeFromCategorySlug(category.slug) ||
+                "cafe",
+        ]),
+    );
+
+    products.forEach((product) => {
+        product.catalogType = categoryMap.get(product.category?.toString()) || "cafe";
+    });
 
     const productMap = new Map();
 
@@ -520,20 +627,60 @@ async function rollbackInventory(plans) {
     }
 }
 
-async function createOrderDocument({ payload, currentUser, session }) {
+async function createOrderDocument({ payload, currentUser, session, commerceSettings }) {
+    if (!commerceSettings.acceptOrders) {
+        throw new OrderServiceError(
+            "ثبت سفارش موقتاً توسط مدیریت غیرفعال شده است",
+            503,
+            "ORDERS_DISABLED",
+        );
+    }
+
+    if (!currentUser && !commerceSettings.guestCheckoutEnabled) {
+        throw new OrderServiceError(
+            "برای ثبت سفارش باید وارد حساب کاربری شوید",
+            401,
+            "AUTH_REQUIRED",
+        );
+    }
+
     const requestedItems = normalizeRequestedItems(payload.items);
 
     const customer = normalizeCustomer(payload, currentUser);
-
-    const delivery = normalizeDelivery(payload);
-
     const paymentMethod = normalizePaymentMethod(payload);
-
     const productMap = await loadProducts(requestedItems, session);
+    const orderContext = resolveOrderContext(payload, requestedItems, productMap);
+    const delivery = normalizeDelivery(payload, orderContext);
 
     const { orderItems, inventoryPlans, subtotal } = buildOrderItems(requestedItems, productMap);
 
-    const deliveryFee = getDeliveryFee(delivery.method);
+    if (commerceSettings.minOrderAmount > 0 && subtotal < commerceSettings.minOrderAmount) {
+        throw new OrderServiceError(
+            `حداقل مبلغ سفارش ${commerceSettings.minOrderAmount.toLocaleString("fa-IR")} تومان است`,
+            409,
+            "MINIMUM_ORDER_AMOUNT",
+        );
+    }
+
+    if (commerceSettings.maxDailyOrders > 0) {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+
+        const todayOrders = await Order.countDocuments({
+            createdAt: { $gte: startOfToday },
+            status: { $ne: ORDER_STATUS.CANCELLED },
+        });
+
+        if (todayOrders >= commerceSettings.maxDailyOrders) {
+            throw new OrderServiceError(
+                "ظرفیت سفارش‌های امروز تکمیل شده است",
+                409,
+                "DAILY_ORDER_CAPACITY_REACHED",
+            );
+        }
+    }
+
+    const deliveryFee = getDeliveryFee(delivery.method, subtotal, commerceSettings);
 
     const discountAmount = 0;
 
@@ -601,13 +748,31 @@ async function createOrderDocument({ payload, currentUser, session }) {
         let order;
 
         if (session) {
-            [order] = await Order.create([orderData], {
-                session,
-            });
+            [order] = await Order.create([orderData], { session });
+            await OrderContext.create(
+                [
+                    {
+                        order: order._id,
+                        user: currentUser?.id || null,
+                        catalogType: orderContext.catalogType,
+                        fulfillmentType: orderContext.fulfillmentType,
+                        tableNumber: orderContext.tableNumber || "",
+                    },
+                ],
+                { session },
+            );
         } else {
             order = await Order.create(orderData);
+            await OrderContext.create({
+                order: order._id,
+                user: currentUser?.id || null,
+                catalogType: orderContext.catalogType,
+                fulfillmentType: orderContext.fulfillmentType,
+                tableNumber: orderContext.tableNumber || "",
+            });
         }
 
+        order._mmdOrderContext = orderContext;
         return order;
     } catch (error) {
         /*
@@ -627,6 +792,7 @@ async function createOrderDocument({ payload, currentUser, session }) {
 export async function createOrder({ payload, currentUser = null }) {
     await connectToDB();
 
+    const commerceSettings = await getCommerceSettings();
     const useTransactions = process.env.MONGO_USE_TRANSACTIONS === "true";
 
     if (!useTransactions) {
@@ -634,6 +800,7 @@ export async function createOrder({ payload, currentUser = null }) {
             payload,
             currentUser,
             session: null,
+            commerceSettings,
         });
     }
 
@@ -647,6 +814,7 @@ export async function createOrder({ payload, currentUser = null }) {
                 payload,
                 currentUser,
                 session,
+                commerceSettings,
             });
         });
 
@@ -659,19 +827,33 @@ export async function createOrder({ payload, currentUser = null }) {
 export async function calculateOrderQuote({ payload }) {
     await connectToDB();
 
+    const commerceSettings = await getCommerceSettings();
+
+    if (!commerceSettings.acceptOrders) {
+        throw new OrderServiceError(
+            "ثبت سفارش موقتاً توسط مدیریت غیرفعال شده است",
+            503,
+            "ORDERS_DISABLED",
+        );
+    }
+
     const requestedItems = normalizeRequestedItems(payload.items);
 
     const productMap = await loadProducts(requestedItems, null);
-
+    const orderContext = resolveOrderContext(payload, requestedItems, productMap);
     const { orderItems, subtotal } = buildOrderItems(requestedItems, productMap);
+    const normalizedDelivery = normalizeDelivery(payload, orderContext);
+    const deliveryMethod = normalizedDelivery.method;
 
-    const requestedDeliveryMethod = payload?.delivery?.method;
+    if (commerceSettings.minOrderAmount > 0 && subtotal < commerceSettings.minOrderAmount) {
+        throw new OrderServiceError(
+            `حداقل مبلغ سفارش ${commerceSettings.minOrderAmount.toLocaleString("fa-IR")} تومان است`,
+            409,
+            "MINIMUM_ORDER_AMOUNT",
+        );
+    }
 
-    const deliveryMethod = DELIVERY_METHOD_VALUES.includes(requestedDeliveryMethod)
-        ? requestedDeliveryMethod
-        : DELIVERY_METHOD.PICKUP;
-
-    const deliveryFee = getDeliveryFee(deliveryMethod);
+    const deliveryFee = getDeliveryFee(deliveryMethod, subtotal, commerceSettings);
 
     const discountAmount = 0;
 
@@ -714,6 +896,8 @@ export async function calculateOrderQuote({ payload }) {
             unitPrice: item.unitPrice,
             lineTotal: item.lineTotal,
         })),
+
+        orderContext,
 
         delivery: {
             method: deliveryMethod,

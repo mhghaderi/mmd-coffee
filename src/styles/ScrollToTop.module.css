@@ -1,0 +1,37 @@
+.button,
+.buttonVisible {
+    position: fixed;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    z-index: 60;
+    display: flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(120, 82, 59, 0.14);
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #3b2921;
+    box-shadow: 0 12px 35px rgba(48, 32, 26, 0.14);
+    cursor: pointer;
+    transition: opacity 180ms ease, transform 180ms ease, visibility 180ms ease;
+}
+
+.button {
+    pointer-events: none;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+.buttonVisible {
+    pointer-events: auto;
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.buttonVisible:hover {
+    transform: translateY(-2px);
+}

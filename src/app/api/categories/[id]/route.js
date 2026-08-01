@@ -208,6 +208,17 @@ export async function PATCH(request, { params }) {
             }
         }
 
+        if (hasOwn(body, "catalogType")) {
+            if (!["cafe", "shop"].includes(body.catalogType)) {
+                return Response.json(
+                    { success: false, message: "نوع دسته‌بندی باید کافه یا فروشگاه باشد" },
+                    { status: 400 },
+                );
+            }
+
+            update.catalogType = body.catalogType;
+        }
+
         if (hasOwn(body, "isActive")) {
             if (typeof body.isActive !== "boolean") {
                 return Response.json(

@@ -91,6 +91,16 @@ const productSchema = new mongoose.Schema(
             index: true,
         },
 
+        catalogType: {
+            type: String,
+            enum: {
+                values: ["cafe", "shop"],
+                message: "نوع محصول باید cafe یا shop باشد",
+            },
+            default: "cafe",
+            index: true,
+        },
+
         shortDescription: {
             type: String,
             trim: true,

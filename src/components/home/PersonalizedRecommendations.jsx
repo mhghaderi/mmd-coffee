@@ -1,250 +1,289 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FiHeart,
-  FiInfo,
-  FiRefreshCw,
-  FiShoppingBag,
-  FiStar,
-  FiX,
-  FiZap,
+    FiChevronLeft,
+    FiChevronRight,
+    FiHeart,
+    FiRefreshCw,
+    FiStar,
+    FiZap,
 } from "react-icons/fi";
+import { A11y, Autoplay, Navigation, Pagination } from "swiper/modules";
+import { Swiper, SwiperSlide } from "swiper/react";
 
 import ProductCard from "@/components/product/ProductCard";
-import SectionHeading from "@/components/ui/SectionHeading";
-
 import { useStore } from "@/context/StoreContext";
 
-import {
-  getPersonalizedRecommendations,
-  hasRecommendationSignals,
-} from "@/lib/recommendations";
+import styles from "./PersonalizedRecommendations.module.css";
 
-export default function PersonalizedRecommendations() {
-  const {
-    cart,
-    wishlist,
-    isHydrated,
-  } = useStore();
+const MAX_PRODUCTS = 6;
 
-  const [seedKey, setSeedKey] = useState("initial");
-  const [refreshVersion, setRefreshVersion] = useState(0);
-  const [isExplanationOpen, setIsExplanationOpen] =
-    useState(false);
+function getIdentity(item) {
+    return String(item?._id || item?.productId || item?.id || item?.slug || "");
+}
 
-  useEffect(() => {
-    if (!isHydrated) {
-      return;
+function uniqueProducts(items = []) {
+    const map = new Map();
+
+    for (const product of items) {
+        const id = getIdentity(product);
+        if (id && !map.has(id)) map.set(id, product);
     }
 
-    const today = new Date().toISOString().slice(0, 10);
+    return [...map.values()];
+}
 
-    setSeedKey(today);
-  }, [isHydrated]);
+export default function PersonalizedRecommendations({
+    products = [],
+    content = {},
+}) {
+    const {
+        isHydrated,
+        wishlistItems = [],
+        cartItems = [],
+        preferencesReady,
+    } = useStore();
 
-  const hasPersonalData = hasRecommendationSignals({
-    cart,
-    wishlist,
-  });
-
-  const recommendations = useMemo(() => {
-    return getPersonalizedRecommendations({
-      cart,
-      wishlist,
-      limit: 4,
-      seedKey: `${seedKey}-${refreshVersion}`,
+    const [state, setState] = useState({
+        loading: true,
+        personalized: false,
+        products: [],
     });
-  }, [
-    cart,
-    wishlist,
-    seedKey,
-    refreshVersion,
-  ]);
+    const [requestKey, setRequestKey] = useState(0);
 
-  const handleRefreshRecommendations = () => {
-    setRefreshVersion((currentVersion) => currentVersion + 1);
-  };
+    const fallbackProducts = useMemo(
+        () => uniqueProducts(products).slice(0, MAX_PRODUCTS),
+        [products],
+    );
 
-  return (
-    <section className="section-spacing relative overflow-hidden bg-cream-50">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-52 top-12 size-[420px] rounded-full bg-caramel-200/30 blur-3xl"
-      />
+    const preferenceFingerprint = useMemo(() => {
+        const wishlist = wishlistItems.map((item) => `w:${getIdentity(item)}`);
+        const cart = cartItems.map(
+            (item) => `c:${getIdentity(item)}:${Math.max(1, Number(item?.quantity) || 1)}`,
+        );
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-64 -left-40 size-[480px] rounded-full bg-coffee-200/40 blur-3xl"
-      />
+        return [...wishlist, ...cart].filter(Boolean).sort().join("|");
+    }, [wishlistItems, cartItems]);
 
-      <div className="page-container relative">
-        <div className="rounded-[2.25rem] border border-coffee-100 bg-white/75 p-5 shadow-[0_25px_80px_rgba(48,32,26,0.08)] backdrop-blur-xl sm:p-8 lg:p-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <SectionHeading
-              eyebrow={
-                hasPersonalData
-                  ? "انتخاب‌شده برای تو"
-                  : "پیشنهاد هوشمند"
-              }
-              title={
-                hasPersonalData
-                  ? "پیشنهادهایی مطابق سلیقه تو"
-                  : "از این انتخاب‌ها شروع کن"
-              }
-              description={
-                hasPersonalData
-                  ? "این محصولات با توجه به علاقه‌مندی‌ها، سبد خرید و محبوبیت محصولات برای تو مرتب شده‌اند."
-                  : "هنوز اطلاعات کافی از سلیقه تو نداریم؛ فعلاً بهترین و محبوب‌ترین انتخاب‌های ممد کافی را نمایش می‌دهیم."
-              }
-            />
+    const loadRecommendations = useCallback(async (signal) => {
+        try {
+            setState((current) => ({ ...current, loading: true }));
 
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setIsExplanationOpen((current) => !current)
-                }
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-coffee-100 bg-white px-4 text-xs font-bold text-coffee-600 shadow-sm transition hover:border-coffee-200 hover:text-coffee-950"
-              >
-                {isExplanationOpen ? (
-                  <FiX />
+            const response = await fetch(`/api/recommendations?t=${Date.now()}`, {
+                method: "GET",
+                cache: "no-store",
+                credentials: "include",
+                headers: {
+                    Accept: "application/json",
+                },
+                signal,
+            });
+
+            const payload = await response.json().catch(() => ({}));
+
+            if (!response.ok || !payload?.success) {
+                throw new Error(payload?.message || "دریافت پیشنهادها انجام نشد");
+            }
+
+            const recommended = uniqueProducts(payload?.data?.products || []).slice(
+                0,
+                MAX_PRODUCTS,
+            );
+
+            setState({
+                loading: false,
+                personalized: Boolean(payload?.personalized),
+                products: recommended.length ? recommended : fallbackProducts,
+            });
+        } catch (error) {
+            if (error?.name === "AbortError") return;
+
+            console.error("PERSONALIZED RECOMMENDATIONS ERROR:", error);
+            setState({
+                loading: false,
+                personalized: false,
+                products: fallbackProducts,
+            });
+        }
+    }, [fallbackProducts]);
+
+    useEffect(() => {
+        if (!isHydrated) return undefined;
+
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => {
+            loadRecommendations(controller.signal);
+        }, 180);
+
+        return () => {
+            window.clearTimeout(timer);
+            controller.abort();
+        };
+    }, [
+        isHydrated,
+        preferencesReady,
+        preferenceFingerprint,
+        requestKey,
+        loadRecommendations,
+    ]);
+
+    const displayProducts = useMemo(() => {
+        const source = state.products.length ? state.products : fallbackProducts;
+        return uniqueProducts(source).slice(0, MAX_PRODUCTS);
+    }, [state.products, fallbackProducts]);
+
+    const title = state.personalized
+        ? content.personalizedTitle || "انتخاب‌شده برای سلیقه تو"
+        : content.fallbackTitle || "پیشنهادهای منتخب ممد کافی";
+
+    const description = state.personalized
+        ? content.personalizedDescription ||
+          "بر اساس علاقه‌مندی‌ها، سبد خرید و رفتار حساب تو؛ با هر انتخاب، پیشنهادها دقیق‌تر می‌شوند."
+        : content.fallbackDescription ||
+          "فعلاً از بهترین و محبوب‌ترین انتخاب‌ها شروع می‌کنیم؛ با استفاده بیشتر از سایت، این بخش مخصوص خودت می‌شود.";
+
+    if (!state.loading && !displayProducts.length) return null;
+
+    return (
+        <section className="page-container section-spacing">
+            <div className={styles.shell}>
+                <div className={styles.glowOne} aria-hidden="true" />
+                <div className={styles.glowTwo} aria-hidden="true" />
+
+                <div className={styles.header}>
+                    <div className={styles.headingGroup}>
+                        <span className={styles.iconBox}>
+                            {state.personalized ? <FiHeart size={20} /> : <FiStar size={20} />}
+                        </span>
+
+                        <div>
+                            <div className={styles.eyebrowRow}>
+                                <span className={styles.eyebrow}>
+                                    {content.eyebrow || "پیشنهاد برای تو"}
+                                </span>
+
+                                {state.personalized && (
+                                    <span className={styles.liveBadge}>
+                                        <FiZap size={11} />
+                                        شخصی‌سازی شده
+                                    </span>
+                                )}
+                            </div>
+
+                            <h2 className={styles.title}>{title}</h2>
+                            <p className={styles.description}>{description}</p>
+                        </div>
+                    </div>
+
+                    <div className={styles.actions}>
+                        <button
+                            type="button"
+                            className={styles.refreshButton}
+                            onClick={() => setRequestKey((current) => current + 1)}
+                            aria-label="به‌روزرسانی پیشنهادها"
+                            title="پیشنهادهای تازه"
+                        >
+                            <FiRefreshCw size={17} />
+                        </button>
+
+                        <button
+                            type="button"
+                            className={`mmd-rec-prev ${styles.navButton}`}
+                            aria-label="پیشنهاد قبلی"
+                        >
+                            <FiChevronRight size={19} />
+                        </button>
+
+                        <button
+                            type="button"
+                            className={`mmd-rec-next ${styles.navButton} ${styles.navButtonPrimary}`}
+                            aria-label="پیشنهاد بعدی"
+                        >
+                            <FiChevronLeft size={19} />
+                        </button>
+                    </div>
+                </div>
+
+                {state.loading && !displayProducts.length ? (
+                    <div className={styles.skeletonGrid}>
+                        {Array.from({ length: 4 }).map((_, index) => (
+                            <div key={index} className={styles.skeleton} />
+                        ))}
+                    </div>
                 ) : (
-                  <FiInfo />
+                    <div className={styles.sliderWrap}>
+                        <div className={styles.edgeRight} aria-hidden="true" />
+                        <div className={styles.edgeLeft} aria-hidden="true" />
+
+                        <Swiper
+                            key={displayProducts.map(getIdentity).join("-")}
+                            className="mmd-recommendations-swiper"
+                            dir="rtl"
+                            modules={[Autoplay, Navigation, Pagination, A11y]}
+                            slidesPerView={1.08}
+                            spaceBetween={14}
+                            speed={720}
+                            grabCursor
+                            watchOverflow
+                            loop={displayProducts.length >= 5}
+                            rewind={displayProducts.length < 5}
+                            navigation={{
+                                nextEl: ".mmd-rec-next",
+                                prevEl: ".mmd-rec-prev",
+                            }}
+                            pagination={{
+                                el: ".mmd-rec-pagination",
+                                clickable: true,
+                                dynamicBullets: true,
+                            }}
+                            autoplay={
+                                displayProducts.length > 4
+                                    ? {
+                                          delay: 4300,
+                                          disableOnInteraction: false,
+                                          pauseOnMouseEnter: true,
+                                      }
+                                    : false
+                            }
+                            breakpoints={{
+                                560: {
+                                    slidesPerView: 2,
+                                    spaceBetween: 16,
+                                },
+                                900: {
+                                    slidesPerView: 3,
+                                    spaceBetween: 18,
+                                },
+                                1180: {
+                                    slidesPerView: 4,
+                                    spaceBetween: 20,
+                                },
+                            }}
+                        >
+                            {displayProducts.map((product) => (
+                                <SwiperSlide key={getIdentity(product)} className={styles.slide}>
+                                    <div className={styles.cardWrap}>
+                                        <ProductCard
+                                            product={product}
+                                            recommendationLabel={product?.recommendationReason}
+                                        />
+                                    </div>
+                                </SwiperSlide>
+                            ))}
+                        </Swiper>
+
+                        {displayProducts.length > 1 && (
+                            <div className={`mmd-rec-pagination ${styles.pagination}`} />
+                        )}
+                    </div>
                 )}
 
-                {isExplanationOpen
-                  ? "بستن توضیحات"
-                  : "این پیشنهادها چطور انتخاب شدند؟"}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleRefreshRecommendations}
-                className="group inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-coffee-900 px-4 text-xs font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-coffee-800"
-              >
-                <FiRefreshCw className="transition-transform duration-500 group-hover:-rotate-180" />
-
-                پیشنهادهای متفاوت
-              </button>
-            </div>
-          </div>
-
-          {/* Recommendation explanation */}
-
-          <div
-            className={`grid transition-all duration-500 ${
-              isExplanationOpen
-                ? "mt-7 grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
-            }`}
-          >
-            <div className="overflow-hidden">
-              <div className="grid gap-3 rounded-2xl border border-coffee-100 bg-cream-50 p-4 sm:grid-cols-3 sm:p-5">
-                <div className="flex items-start gap-3 rounded-xl bg-white p-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-500">
-                    <FiHeart />
-                  </span>
-
-                  <div>
-                    <p className="text-sm font-black text-coffee-950">
-                      علاقه‌مندی‌ها
-                    </p>
-
-                    <p className="mt-1 text-xs leading-6 text-coffee-500">
-                      دسته محصولاتی که بیشتر ذخیره کرده‌ای امتیاز
-                      بالاتری می‌گیرند.
-                    </p>
-                  </div>
+                <div className={styles.bottomNote}>
+                    <span className={styles.dot} />
+                    پیشنهادها با تغییر سبد خرید و علاقه‌مندی‌های تو دوباره محاسبه می‌شوند.
                 </div>
-
-                <div className="flex items-start gap-3 rounded-xl bg-white p-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-coffee-100 text-coffee-700">
-                    <FiShoppingBag />
-                  </span>
-
-                  <div>
-                    <p className="text-sm font-black text-coffee-950">
-                      سبد خرید
-                    </p>
-
-                    <p className="mt-1 text-xs leading-6 text-coffee-500">
-                      انتخاب‌های داخل سبد برای تشخیص سلیقه تو
-                      استفاده می‌شوند.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 rounded-xl bg-white p-4">
-                  <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-caramel-100 text-caramel-700">
-                    <FiStar />
-                  </span>
-
-                  <div>
-                    <p className="text-sm font-black text-coffee-950">
-                      محبوبیت و امتیاز
-                    </p>
-
-                    <p className="mt-1 text-xs leading-6 text-coffee-500">
-                      محصولاتی که امتیاز و محبوبیت بیشتری دارند
-                      در اولویت قرار می‌گیرند.
-                    </p>
-                  </div>
-                </div>
-              </div>
             </div>
-          </div>
-
-          {/* Recommendation status */}
-
-          <div className="mt-8 flex items-center justify-between gap-4 rounded-2xl border border-coffee-100 bg-cream-50 px-4 py-3 sm:px-5">
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-coffee-900 text-white">
-                <FiZap />
-              </span>
-
-              <div>
-                <p className="text-sm font-black text-coffee-950">
-                  {hasPersonalData
-                    ? "پروفایل سلیقه فعال است"
-                    : "پروفایل سلیقه در حال یادگیری است"}
-                </p>
-
-                <p className="mt-1 text-xs text-coffee-500">
-                  {hasPersonalData
-                    ? "پیشنهادها با رفتار فعلی تو هماهنگ شده‌اند."
-                    : "با اضافه‌کردن محصولات به سبد و علاقه‌مندی‌ها، پیشنهادها دقیق‌تر می‌شوند."}
-                </p>
-              </div>
-            </div>
-
-            <span
-              className={`hidden rounded-full px-3 py-1.5 text-xs font-bold sm:inline-flex ${
-                hasPersonalData
-                  ? "bg-success/10 text-success"
-                  : "bg-caramel-100 text-caramel-700"
-              }`}
-            >
-              {hasPersonalData
-                ? "شخصی‌سازی‌شده"
-                : "حالت اولیه"}
-            </span>
-          </div>
-
-          {/* Product grid */}
-
-          <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {recommendations.map((recommendation) => (
-              <ProductCard
-                key={recommendation.product.id}
-                product={recommendation.product}
-                recommendationLabel={recommendation.reason}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
-  );
+        </section>
+    );
 }

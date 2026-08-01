@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">محصول MMD</title><desc id="desc">MMD Coffee product illustration</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf3"/><stop offset="1" stop-color="#c8793f" stop-opacity=".25"/></linearGradient><filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#2f211b" flood-opacity=".16"/></filter></defs>
+<rect width="512" height="512" rx="92" fill="url(#bg)"/>
+<circle cx="410" cy="102" r="66" fill="#c8793f" opacity=".12"/><circle cx="91" cy="410" r="92" fill="#c8793f" opacity=".10"/>
+<g filter="url(#shadow)"><path d="M171 190h151v145c0 43-31 76-75 76s-76-33-76-76V190Z" fill="#fffaf3" stroke="#2f211b" stroke-width="11"/><path d="M322 224h31c35 0 53 25 53 54s-18 54-53 54h-31" fill="none" stroke="#2f211b" stroke-width="11"/><path d="M197 241h99v79h-99z" fill="#c8793f" opacity=".78"/><path d="M205 142c-16-20 16-31 0-52M256 142c-16-20 16-31 0-52M307 142c-16-20 16-31 0-52" fill="none" stroke="#2f211b" stroke-width="9" stroke-linecap="round"/></g>
+<text x="256" y="458" text-anchor="middle" font-family="Arial, sans-serif" font-weight="700" font-size="24" fill="#2f211b">محصول</text>
+<text x="256" y="484" text-anchor="middle" font-family="Arial, sans-serif" font-weight="600" font-size="16" fill="#7b5a49">MMD</text>
+</svg>

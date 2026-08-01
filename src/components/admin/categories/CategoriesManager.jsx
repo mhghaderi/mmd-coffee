@@ -33,6 +33,7 @@ const emptyForm = {
     title: "",
     slug: "",
     description: "",
+    catalogType: "cafe",
     image: "",
     imageAlt: "",
     accentColor: "#c8793f",
@@ -160,6 +161,7 @@ export default function CategoriesManager({ initialCategories }) {
             title: category.title || "",
             slug: category.slug || "",
             description: category.description || "",
+            catalogType: category.catalogType === "shop" ? "shop" : "cafe",
             image: category.image || "",
             imageAlt: category.imageAlt || "",
             accentColor: category.accentColor || "#c8793f",
@@ -271,6 +273,7 @@ export default function CategoriesManager({ initialCategories }) {
                     title: form.title.trim(),
                     slug: form.slug.trim(),
                     description: form.description.trim(),
+                    catalogType: form.catalogType,
                     image: form.image.trim(),
                     imageAlt: form.imageAlt.trim(),
                     accentColor: form.accentColor.trim(),
@@ -788,6 +791,23 @@ export default function CategoriesManager({ initialCategories }) {
                                 maxLength={500}
                                 className={textareaClassName}
                             />
+                        </div>
+
+                        <div className="mt-5">
+                            <label className="mb-2 block text-sm font-bold text-coffee-800">
+                                بخش دسته‌بندی
+                            </label>
+                            <select
+                                value={form.catalogType}
+                                onChange={(event) => updateField("catalogType", event.target.value)}
+                                className={inputClassName}
+                            >
+                                <option value="cafe">منوی کافه — نوشیدنی و خوراکی</option>
+                                <option value="shop">فروشگاه — دانه، ابزار و اکسسوری</option>
+                            </select>
+                            <p className="mt-2 text-xs leading-6 text-coffee-400">
+                                این انتخاب مشخص می‌کند محصولات این دسته در /menu یا /shop نمایش داده شوند.
+                            </p>
                         </div>
 
                         <div className="mt-5 grid gap-5 sm:grid-cols-[1fr_180px]">
