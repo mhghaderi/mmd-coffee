@@ -22,7 +22,7 @@ async function getPreference(userId) {
     return UserPreference.findOneAndUpdate(
         { user: userId },
         { $setOnInsert: { user: userId } },
-        { new: true, upsert: true, setDefaultsOnInsert: true },
+        { returnDocument: "after", upsert: true, setDefaultsOnInsert: true },
     );
 }
 
@@ -93,11 +93,17 @@ export async function POST(request) {
 
         if (action === "sync_wishlist") {
             const rawIds = Array.isArray(body.productIds) ? body.productIds : [];
-            const validIds = [...new Set(rawIds.map(String))].filter((id) => mongoose.isValidObjectId(id));
+            const validIds = [...new Set(rawIds.map(String))].filter((id) =>
+                mongoose.isValidObjectId(id),
+            );
 
             if (validIds.length) {
-                const products = await Product.find({ _id: { $in: validIds } }).select("_id category").lean();
-                const existing = new Set(preference.wishlist.map((item) => stringifyId(item.product)));
+                const products = await Product.find({ _id: { $in: validIds } })
+                    .select("_id category")
+                    .lean();
+                const existing = new Set(
+                    preference.wishlist.map((item) => stringifyId(item.product)),
+                );
                 const newlyAddedIds = [];
 
                 for (const product of products) {
@@ -134,12 +140,11 @@ export async function POST(request) {
             );
         }
 
-        const product = await Product.findById(productId).select("_id category status archivedAt").lean();
+        const product = await Product.findById(productId)
+            .select("_id category status archivedAt")
+            .lean();
         if (!product || product.archivedAt || product.status === "archived") {
-            return Response.json(
-                { success: false, message: "محصول پیدا نشد" },
-                { status: 404 },
-            );
+            return Response.json({ success: false, message: "محصول پیدا نشد" }, { status: 404 });
         }
 
         if (action === "toggle_wishlist") {
@@ -167,17 +172,18 @@ export async function POST(request) {
                     { $inc: { wishlistCount: 1, popularityScore: 2 } },
                 );
             } else {
-                await Product.updateOne(
-                    { _id: product._id },
-                    [
-                        {
-                            $set: {
-                                wishlistCount: { $max: [0, { $subtract: [{ $ifNull: ["$wishlistCount", 0] }, 1] }] },
-                                popularityScore: { $max: [0, { $subtract: [{ $ifNull: ["$popularityScore", 0] }, 1] }] },
+                await Product.updateOne({ _id: product._id }, [
+                    {
+                        $set: {
+                            wishlistCount: {
+                                $max: [0, { $subtract: [{ $ifNull: ["$wishlistCount", 0] }, 1] }],
+                            },
+                            popularityScore: {
+                                $max: [0, { $subtract: [{ $ifNull: ["$popularityScore", 0] }, 1] }],
                             },
                         },
-                    ],
-                );
+                    },
+                ]);
             }
 
             return Response.json({
@@ -205,10 +211,7 @@ export async function POST(request) {
                     { $inc: { viewsCount: 1, popularityScore: 0.1 } },
                 );
             } else if (event === "cart") {
-                await Product.updateOne(
-                    { _id: product._id },
-                    { $inc: { popularityScore: 0.5 } },
-                );
+                await Product.updateOne({ _id: product._id }, { $inc: { popularityScore: 0.5 } });
             }
 
             return Response.json({ success: true });
@@ -244,17 +247,18 @@ export async function DELETE() {
         );
 
         if (productIds.length) {
-            await Product.updateMany(
-                { _id: { $in: productIds } },
-                [
-                    {
-                        $set: {
-                            wishlistCount: { $max: [0, { $subtract: [{ $ifNull: ["$wishlistCount", 0] }, 1] }] },
-                            popularityScore: { $max: [0, { $subtract: [{ $ifNull: ["$popularityScore", 0] }, 1] }] },
+            await Product.updateMany({ _id: { $in: productIds } }, [
+                {
+                    $set: {
+                        wishlistCount: {
+                            $max: [0, { $subtract: [{ $ifNull: ["$wishlistCount", 0] }, 1] }],
+                        },
+                        popularityScore: {
+                            $max: [0, { $subtract: [{ $ifNull: ["$popularityScore", 0] }, 1] }],
                         },
                     },
-                ],
-            );
+                },
+            ]);
         }
 
         return Response.json({ success: true });

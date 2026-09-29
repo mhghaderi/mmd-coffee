@@ -21,11 +21,9 @@ function normalizeSubId(value) {
 }
 
 function createKey(productId, variantId = "", addOnIds = []) {
-    return [
-        productId,
-        variantId || "default",
-        [...addOnIds].sort().join(",") || "no-addons",
-    ].join("::");
+    return [productId, variantId || "default", [...addOnIds].sort().join(",") || "no-addons"].join(
+        "::",
+    );
 }
 
 function cleanIncomingItems(items = []) {
@@ -36,11 +34,13 @@ function cleanIncomingItems(items = []) {
         if (!mongoose.isValidObjectId(productId)) continue;
 
         const variantId = String(raw?.variantId || raw?.variant?.id || "").trim();
-        const addOnIds = [...new Set(
-            (Array.isArray(raw?.addOnIds) ? raw.addOnIds : raw?.addOns?.map((item) => item?.id))
-                .map((item) => String(item || "").trim())
-                .filter(Boolean),
-        )].sort();
+        const addOnIds = [
+            ...new Set(
+                (Array.isArray(raw?.addOnIds) ? raw.addOnIds : raw?.addOns?.map((item) => item?.id))
+                    .map((item) => String(item || "").trim())
+                    .filter(Boolean),
+            ),
+        ].sort();
         const quantity = Math.max(1, Math.min(99, Number.parseInt(raw?.quantity || 1, 10) || 1));
         const key = createKey(productId, variantId, addOnIds);
 
@@ -65,13 +65,15 @@ async function getPreference(userId) {
     return UserPreference.findOneAndUpdate(
         { user: userId },
         { $setOnInsert: { user: userId } },
-        { new: true, upsert: true, setDefaultsOnInsert: true },
+        { returnDocument: "after", upsert: true, setDefaultsOnInsert: true },
     );
 }
 
 async function loadCart(preference) {
     const entries = Array.isArray(preference?.cart) ? preference.cart : [];
-    const productIds = [...new Set(entries.map((entry) => stringifyId(entry.product)).filter(Boolean))];
+    const productIds = [
+        ...new Set(entries.map((entry) => stringifyId(entry.product)).filter(Boolean)),
+    ];
     if (!productIds.length) return [];
 
     const products = await Product.find({
@@ -224,11 +226,7 @@ export async function DELETE() {
         if (!userId) return unauthorized();
 
         await connectToDB();
-        await UserPreference.updateOne(
-            { user: userId },
-            { $set: { cart: [] } },
-            { upsert: true },
-        );
+        await UserPreference.updateOne({ user: userId }, { $set: { cart: [] } }, { upsert: true });
 
         return Response.json({ success: true, data: { cart: [] } });
     } catch (error) {

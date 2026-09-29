@@ -2,15 +2,7 @@ import connectToDB from "@/lib/db/connectToDB";
 import { requireAdmin } from "@/lib/auth/session";
 import SiteSettings from "@/models/SiteSettings";
 
-const dayValues = [
-    "saturday",
-    "sunday",
-    "monday",
-    "tuesday",
-    "wednesday",
-    "thursday",
-    "friday",
-];
+const dayValues = ["saturday", "sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
 
 function cleanText(value, maxLength) {
     return typeof value === "string" ? value.trim().slice(0, maxLength) : "";
@@ -31,18 +23,10 @@ function cleanBoolean(value, fallback = false) {
 }
 
 function normalizeKeywords(value) {
-    const source = Array.isArray(value)
-        ? value
-        : typeof value === "string"
-          ? value.split(",")
-          : [];
+    const source = Array.isArray(value) ? value : typeof value === "string" ? value.split(",") : [];
 
     return [
-        ...new Set(
-            source
-                .map((item) => cleanText(item, 50).toLowerCase())
-                .filter(Boolean),
-        ),
+        ...new Set(source.map((item) => cleanText(item, 50).toLowerCase()).filter(Boolean)),
     ].slice(0, 20);
 }
 
@@ -188,7 +172,7 @@ export async function PATCH(request) {
                 $setOnInsert: { key: "main" },
             },
             {
-                new: true,
+                returnDocument: "after",
                 upsert: true,
                 runValidators: true,
                 setDefaultsOnInsert: true,
