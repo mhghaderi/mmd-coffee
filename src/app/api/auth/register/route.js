@@ -21,7 +21,6 @@ function validatePhone(phone) {
         return "شماره تماس معتبر نیست";
     }
 
-    // هم شماره ایران و هم فرمت‌های بین‌المللی ساده را قبول می‌کنیم.
     if (!/^\+?\d{7,15}$/.test(phone)) {
         return "شماره تماس معتبر نیست";
     }
@@ -48,8 +47,6 @@ export async function POST(request) {
         const phone = normalizePhone(body?.phone);
         const password = typeof body?.password === "string" ? body.password : "";
 
-        // برای سازگاری با فرم‌های قدیمی، نبود confirmPassword باعث Crash/Reject نمی‌شود.
-        // فرم جدید آن را همیشه ارسال می‌کند.
         const confirmPassword =
             typeof body?.confirmPassword === "string" ? body.confirmPassword : password;
 
@@ -112,7 +109,7 @@ export async function POST(request) {
         try {
             await setAuthSession(user);
         } catch (sessionError) {
-            // خود حساب ساخته شده؛ خطای Cookie/JWT نباید کل ثبت‌نام را Crash کند.
+            
             console.error("REGISTER SESSION ERROR:", sessionError);
             sessionCreated = false;
         }

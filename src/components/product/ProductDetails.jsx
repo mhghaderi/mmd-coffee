@@ -79,8 +79,7 @@ export default function ProductDetails({ product, detailBasePath = "/menu" }) {
 
     useEffect(() => {
         recordInteraction(normalizedProduct, "view");
-        // فقط هنگام ورود به محصول/تغییر محصول ثبت می‌شود.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [product._id, product.id, product.slug]);
 
     const toggleAddOn = (id) => {
@@ -135,6 +134,7 @@ export default function ProductDetails({ product, detailBasePath = "/menu" }) {
                             alt={product.name}
                             fill
                             priority
+                            unoptimized={Boolean(typeof activeImage === "string" && activeImage.startsWith("http"))}
                             sizes="(max-width: 1024px) 92vw, 45vw"
                             className="object-contain p-12 drop-shadow-[0_30px_35px_rgba(48,32,26,0.2)]"
                         />

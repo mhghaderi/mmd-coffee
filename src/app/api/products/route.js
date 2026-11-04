@@ -5,7 +5,7 @@ import Category from "@/models/Category";
 import Product from "@/models/Product";
 import { getCurrentUser, requireAdmin } from "@/lib/auth/session";
 
-const allowedStatuses = ["draft", "published", "archived"];
+const allowedStatuses = ["draft", "published"];
 
 const allowedSorts = {
     newest: {
@@ -40,7 +40,7 @@ const allowedSorts = {
 };
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
 }
 
 function normalizeStringArray(value) {
@@ -114,22 +114,6 @@ function normalizeAddOns(value) {
         }))
         .filter((item) => item.title);
 }
-
-/*
-  GET /api/products
-
-  Query parameters:
-
-  q
-  category
-  status
-  available
-  discounted
-  featured
-  sort
-  page
-  limit
-*/
 
 export async function GET(request) {
     try {
@@ -223,9 +207,6 @@ export async function GET(request) {
             filter.status = "published";
             filter.isAvailable = true;
         }
-        // if (allowedStatuses.includes(requestedStatus)) {
-        //     filter.status = requestedStatus;
-        // }
 
         if (isAdmin && searchParams.get("available") === "1") {
             filter.isAvailable = true;
@@ -291,10 +272,6 @@ export async function GET(request) {
         );
     }
 }
-
-/*
-  POST /api/products
-*/
 
 export async function POST(request) {
     const authorization = await requireAdmin();

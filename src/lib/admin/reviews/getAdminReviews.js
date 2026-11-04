@@ -33,7 +33,7 @@ function firstValue(value) {
 }
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
 }
 
 function serialize(value) {
@@ -65,7 +65,7 @@ export default async function getAdminReviews(rawSearchParams = {}) {
 
     const query = {};
 
-    if (["pending", "approved", "rejected", "archived"].includes(filters.status)) {
+    if (["pending", "approved", "rejected"].includes(filters.status)) {
         query.status = filters.status;
     }
 
@@ -124,14 +124,13 @@ export default async function getAdminReviews(rawSearchParams = {}) {
         ];
     }
 
-    const [total, pendingCount, approvedCount, rejectedCount, archivedCount, verifiedCount] =
+    const [total, pendingCount, approvedCount, rejectedCount, verifiedCount] =
         await Promise.all([
             Review.countDocuments(query),
             Review.countDocuments({ status: "pending" }),
             Review.countDocuments({ status: "approved" }),
             Review.countDocuments({ status: "rejected" }),
-            Review.countDocuments({ status: "archived" }),
-            Review.countDocuments({ isVerifiedPurchase: true }),
+                        Review.countDocuments({ isVerifiedPurchase: true }),
         ]);
 
     const pages = total === 0 ? 0 : Math.ceil(total / filters.limit);
@@ -147,10 +146,7 @@ export default async function getAdminReviews(rawSearchParams = {}) {
             path: "user",
             select: "name email avatar",
         })
-        .populate({
-            path: "adminReply.repliedBy",
-            select: "name email",
-        })
+        
         .sort(sortOptions[filters.sort])
         .skip((filters.page - 1) * filters.limit)
         .limit(filters.limit)
@@ -169,11 +165,10 @@ export default async function getAdminReviews(rawSearchParams = {}) {
             hasNextPage: filters.page < pages,
         },
         stats: {
-            total: pendingCount + approvedCount + rejectedCount + archivedCount,
+            total: pendingCount + approvedCount + rejectedCount,
             pendingCount,
             approvedCount,
             rejectedCount,
-            archivedCount,
             verifiedCount,
         },
     };

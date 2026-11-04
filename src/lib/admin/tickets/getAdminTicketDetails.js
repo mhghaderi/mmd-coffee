@@ -37,18 +37,8 @@ export default async function getAdminTicketDetails(identifier) {
                 path: "user",
                 select: "name email phone avatar isActive createdAt",
             })
-            .populate({
-                path: "assignedTo",
-                select: "name email avatar",
-            })
-            .populate({
-                path: "order",
-                select: "orderNumber pricing status payment createdAt",
-            })
-            .populate({
-                path: "messages.sender",
-                select: "name email avatar role",
-            })
+            
+            
             .lean(),
 
         User.find({

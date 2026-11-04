@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 
 import {
     FiAlertCircle,
-    FiArchive,
-    FiArrowDown,
+        FiArrowDown,
     FiArrowUp,
     FiCheck,
     FiEdit3,
@@ -120,9 +119,8 @@ export default function CategoriesManager({ initialCategories }) {
 
             const matchesStatus =
                 statusFilter === "all" ||
-                (statusFilter === "active" && !category.archivedAt && category.isActive) ||
-                (statusFilter === "inactive" && !category.archivedAt && !category.isActive) ||
-                (statusFilter === "archived" && category.archivedAt);
+                (statusFilter === "active" && category.isActive) ||
+                (statusFilter === "inactive" && !category.isActive);
 
             return matchesSearch && matchesStatus;
         });
@@ -131,7 +129,6 @@ export default function CategoriesManager({ initialCategories }) {
     const orderedActiveCategories = useMemo(
         () =>
             categories
-                .filter((category) => !category.archivedAt)
                 .sort((first, second) => first.displayOrder - second.displayOrder),
         [categories],
     );
@@ -378,7 +375,7 @@ export default function CategoriesManager({ initialCategories }) {
             const result = await response.json();
 
             if (!response.ok || !result.success) {
-                setErrorMessage(result.message || "بایگانی انجام نشد");
+                setErrorMessage(result.message || "حذف انجام نشد");
 
                 return;
             }
@@ -474,7 +471,6 @@ export default function CategoriesManager({ initialCategories }) {
 
                         <option value="inactive">غیرفعال</option>
 
-                        <option value="archived">بایگانی‌شده</option>
                     </select>
 
                     <button
@@ -579,38 +575,27 @@ export default function CategoriesManager({ initialCategories }) {
                                             </td>
 
                                             <td className="px-4 py-4">
-                                                {category.archivedAt ? (
-                                                    <span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600">
-                                                        بایگانی‌شده
-                                                    </span>
-                                                ) : (
-                                                    <button
-                                                        type="button"
-                                                        disabled={isBusy}
-                                                        onClick={() => toggleCategory(category)}
-                                                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
-                                                            category.isActive
-                                                                ? "bg-emerald-50 text-emerald-700"
-                                                                : "bg-amber-50 text-amber-700"
-                                                        }`}
-                                                    >
-                                                        {isBusy ? (
-                                                            <FiLoader className="animate-spin" />
-                                                        ) : (
-                                                            <FiCheck />
-                                                        )}
+                                                <button
+                                                    type="button"
+                                                    disabled={isBusy}
+                                                    onClick={() => toggleCategory(category)}
+                                                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
+                                                        category.isActive
+                                                            ? "bg-emerald-50 text-emerald-700"
+                                                            : "bg-amber-50 text-amber-700"
+                                                    }`}
+                                                >
+                                                    {isBusy ? (
+                                                        <FiLoader className="animate-spin" />
+                                                    ) : (
+                                                        <FiCheck />
+                                                    )}
 
-                                                        {category.isActive ? "فعال" : "غیرفعال"}
-                                                    </button>
-                                                )}
+                                                    {category.isActive ? "فعال" : "غیرفعال"}
+                                                </button>
                                             </td>
 
                                             <td className="px-4 py-4">
-                                                {category.archivedAt ? (
-                                                    <span className="text-xs text-coffee-300">
-                                                        —
-                                                    </span>
-                                                ) : (
                                                     <div className="flex items-center gap-1">
                                                         <button
                                                             type="button"
@@ -638,52 +623,31 @@ export default function CategoriesManager({ initialCategories }) {
                                                             <FiArrowDown />
                                                         </button>
                                                     </div>
-                                                )}
                                             </td>
 
                                             <td className="px-5 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    {category.archivedAt ? (
-                                                        <button
-                                                            type="button"
-                                                            disabled={isBusy}
-                                                            onClick={() =>
-                                                                restoreCategory(category)
-                                                            }
-                                                            className="flex size-10 items-center justify-center rounded-xl border border-coffee-100 text-coffee-600 hover:bg-cream-100"
-                                                            aria-label={`بازیابی ${category.title}`}
-                                                        >
-                                                            {isBusy ? (
-                                                                <FiLoader className="animate-spin" />
-                                                            ) : (
-                                                                <FiRotateCcw />
-                                                            )}
-                                                        </button>
-                                                    ) : (
-                                                        <>
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    openEditForm(category)
-                                                                }
-                                                                className="flex size-10 items-center justify-center rounded-xl border border-coffee-100 text-coffee-600 hover:bg-cream-100"
-                                                                aria-label={`ویرایش ${category.title}`}
-                                                            >
-                                                                <FiEdit3 />
-                                                            </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            openEditForm(category)
+                                                        }
+                                                        className="flex size-10 items-center justify-center rounded-xl border border-coffee-100 text-coffee-600 hover:bg-cream-100"
+                                                        aria-label={`ویرایش ${category.title}`}
+                                                    >
+                                                        <FiEdit3 />
+                                                    </button>
 
-                                                            <button
-                                                                type="button"
-                                                                onClick={() =>
-                                                                    setArchiveCategory(category)
-                                                                }
-                                                                className="flex size-10 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
-                                                                aria-label={`بایگانی ${category.title}`}
-                                                            >
-                                                                <FiArchive />
-                                                            </button>
-                                                        </>
-                                                    )}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            setArchiveCategory(category)
+                                                        }
+                                                        className="flex size-10 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
+                                                        aria-label={`حذف ${category.title}`}
+                                                    >
+                                                        <FiTrash2 />
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -702,8 +666,6 @@ export default function CategoriesManager({ initialCategories }) {
                     <p className="mt-2 text-sm text-coffee-400">جست‌وجو یا فیلتر را تغییر بده.</p>
                 </div>
             )}
-
-            {/* Create/edit modal */}
 
             {isFormOpen && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
@@ -1014,8 +976,6 @@ export default function CategoriesManager({ initialCategories }) {
                 </div>
             )}
 
-            {/* Archive confirmation */}
-
             {archiveCategory && (
                 <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
                     <button
@@ -1030,12 +990,11 @@ export default function CategoriesManager({ initialCategories }) {
                         </span>
 
                         <h2 className="mt-5 text-xl font-black text-coffee-950">
-                            بایگانی دسته‌بندی
+                            حذف دسته‌بندی
                         </h2>
 
                         <p className="mt-3 text-sm leading-7 text-coffee-500">
-                            دسته‌بندی «{archiveCategory.title}» بایگانی می‌شود. ارتباط محصولات آن
-                            حفظ خواهد شد.
+                            آیا از حذف دسته‌بندی «{archiveCategory.title}» اطمینان دارید؟
                         </p>
 
                         <div className="mt-6 flex gap-3">
@@ -1057,7 +1016,7 @@ export default function CategoriesManager({ initialCategories }) {
                                     <FiLoader className="animate-spin text-current" />
                                 )}
 
-                                <span className="text-current">تأیید بایگانی</span>
+                                <span className="text-current">تأیید حذف</span>
                             </button>
                         </div>
                     </div>

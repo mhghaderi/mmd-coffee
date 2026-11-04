@@ -31,10 +31,6 @@ export default function ProductFilters({ categories }) {
             }
         });
 
-        /*
-      با تغییر هر فیلتر، کاربر به صفحه اول برگردد.
-    */
-
         if (!Object.hasOwn(updates, "page")) {
             nextParams.delete("page");
         }
@@ -66,8 +62,7 @@ export default function ProductFilters({ categories }) {
         return () => {
             window.clearTimeout(timer);
         };
-        // updateFilters عمداً داخل وابستگی‌ها قرار نگرفته است.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [searchValue, currentSearch]);
 
     const activeFiltersCount = [
@@ -128,7 +123,6 @@ export default function ProductFilters({ categories }) {
 
                         <option value="draft">پیش‌نویس</option>
 
-                        <option value="archived">بایگانی‌شده</option>
                     </select>
 
                     <select

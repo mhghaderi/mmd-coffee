@@ -142,7 +142,7 @@ export async function PATCH(request, { params }) {
         }
 
         if (Object.hasOwn(body, "status")) {
-            if (!["draft", "published", "archived"].includes(body.status)) {
+            if (!["draft", "published"].includes(body.status)) {
                 return Response.json(
                     {
                         success: false,
@@ -169,10 +169,6 @@ export async function PATCH(request, { params }) {
                 article.archivedAt = null;
             }
 
-            if (body.status === "archived") {
-                article.archivedAt = new Date();
-                article.isFeatured = false;
-            }
         }
 
         await article.save();
@@ -223,7 +219,7 @@ export async function DELETE(request, { params }) {
         await connectToDB();
 
         const { id } = await params;
-        const article = await Article.findOne(createArticleFilter(id));
+        const article = await Article.findOneAndDelete(createArticleFilter(id));
 
         if (!article) {
             return Response.json(
@@ -237,28 +233,17 @@ export async function DELETE(request, { params }) {
             );
         }
 
-        article.status = "archived";
-        article.archivedAt = new Date();
-        article.isFeatured = false;
-
-        await article.save();
-
         return Response.json({
             success: true,
-            message: "مقاله با موفقیت بایگانی شد",
-            data: {
-                _id: article._id,
-                status: article.status,
-                archivedAt: article.archivedAt,
-            },
+            message: "مقاله با موفقیت حذف شد",
         });
     } catch (error) {
-        console.error("ARCHIVE ARTICLE ERROR:", error);
+        console.error("DELETE ARTICLE ERROR:", error);
 
         return Response.json(
             {
                 success: false,
-                message: "بایگانی مقاله انجام نشد",
+                message: "حذف مقاله انجام نشد",
             },
             {
                 status: 500,

@@ -10,6 +10,6 @@ export default async function getUserTicketDetails(identifier) {
     if (!currentUser || currentUser.role === "admin") return null;
     await connectToDB();
     const filter = mongoose.isValidObjectId(identifier) ? { _id: identifier } : { ticketNumber: String(identifier || "").trim().toUpperCase() };
-    const ticket = await Ticket.findOne({ ...filter, user: currentUser.id }).populate({ path: "order", select: "orderNumber pricing status createdAt" }).populate({ path: "messages.sender", select: "name avatar role" }).lean();
+    const ticket = await Ticket.findOne({ ...filter, user: currentUser.id }).lean();
     return ticket ? serialize(ticket) : null;
 }

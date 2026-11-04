@@ -56,7 +56,7 @@ export default async function SiteLayout({ children }) {
                 }}
             />
             <main className="flex-1">{children}</main>
-            <Footer settings={settings || {}} content={content?.footer || {}} />
+            <Footer settings={settings || {} } content={content?.footer || {} } />
         </div>
     );
 }

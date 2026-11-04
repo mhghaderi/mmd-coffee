@@ -24,7 +24,7 @@ export async function PATCH(request) {
             return Response.json({ success: false, message: "شماره تماس معتبر نیست" }, { status: 400 });
         }
 
-        const user = await User.findByIdAndUpdate(authentication.user.id, { $set: { name, phone } }, { new: true, runValidators: true }).select("name email phone role avatar isActive emailVerified").lean();
+        const user = await User.findByIdAndUpdate(authentication.user.id, { $set: { name, phone } }, { returnDocument: 'after', runValidators: true }).select("name email phone role avatar isActive emailVerified").lean();
         return Response.json({ success: true, data: user });
     } catch (error) {
         console.error("UPDATE USER PROFILE ERROR:", error);

@@ -12,7 +12,7 @@ export default async function getSiteContent() {
         { key: "main" },
         { $setOnInsert: { key: "main" } },
         {
-            new: true,
+            returnDocument: 'after',
             upsert: true,
             setDefaultsOnInsert: true,
         },

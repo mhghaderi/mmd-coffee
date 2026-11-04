@@ -17,7 +17,6 @@ import connectToDB from "@/lib/db/connectToDB";
 import Counter from "@/models/Counter";
 import Category from "@/models/Category";
 import Order from "@/models/Order";
-import OrderContext from "@/models/OrderContext";
 import Product from "@/models/Product";
 import SiteSettings from "@/models/SiteSettings";
 import { inferCatalogTypeFromCategorySlug, normalizeCatalogType } from "@/constants/catalog";
@@ -290,7 +289,7 @@ function normalizePaymentMethod(payload) {
 
 async function getNextOrderNumber(session = null) {
     const options = {
-        new: true,
+        returnDocument: 'after',
         upsert: true,
         setDefaultsOnInsert: true,
     };
@@ -628,13 +627,6 @@ async function rollbackInventory(plans) {
 }
 
 async function createOrderDocument({ payload, currentUser, session, commerceSettings }) {
-    if (!commerceSettings.acceptOrders) {
-        throw new OrderServiceError(
-            "ثبت سفارش موقتاً توسط مدیریت غیرفعال شده است",
-            503,
-            "ORDERS_DISABLED",
-        );
-    }
 
     if (!currentUser && !commerceSettings.guestCheckoutEnabled) {
         throw new OrderServiceError(
@@ -653,32 +645,6 @@ async function createOrderDocument({ payload, currentUser, session, commerceSett
     const delivery = normalizeDelivery(payload, orderContext);
 
     const { orderItems, inventoryPlans, subtotal } = buildOrderItems(requestedItems, productMap);
-
-    if (commerceSettings.minOrderAmount > 0 && subtotal < commerceSettings.minOrderAmount) {
-        throw new OrderServiceError(
-            `حداقل مبلغ سفارش ${commerceSettings.minOrderAmount.toLocaleString("fa-IR")} تومان است`,
-            409,
-            "MINIMUM_ORDER_AMOUNT",
-        );
-    }
-
-    if (commerceSettings.maxDailyOrders > 0) {
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-
-        const todayOrders = await Order.countDocuments({
-            createdAt: { $gte: startOfToday },
-            status: { $ne: ORDER_STATUS.CANCELLED },
-        });
-
-        if (todayOrders >= commerceSettings.maxDailyOrders) {
-            throw new OrderServiceError(
-                "ظرفیت سفارش‌های امروز تکمیل شده است",
-                409,
-                "DAILY_ORDER_CAPACITY_REACHED",
-            );
-        }
-    }
 
     const deliveryFee = getDeliveryFee(delivery.method, subtotal, commerceSettings);
 
@@ -743,43 +709,22 @@ async function createOrderDocument({ payload, currentUser, session, commerceSett
             customerNote: cleanText(payload.customerNote, 1000),
 
             source: "web",
+            catalogType: orderContext?.catalogType || "shop",
+            fulfillmentType: orderContext?.fulfillmentType || "delivery",
+            tableNumber: orderContext?.tableNumber || "",
         };
 
         let order;
 
         if (session) {
             [order] = await Order.create([orderData], { session });
-            await OrderContext.create(
-                [
-                    {
-                        order: order._id,
-                        user: currentUser?.id || null,
-                        catalogType: orderContext.catalogType,
-                        fulfillmentType: orderContext.fulfillmentType,
-                        tableNumber: orderContext.tableNumber || "",
-                    },
-                ],
-                { session },
-            );
         } else {
             order = await Order.create(orderData);
-            await OrderContext.create({
-                order: order._id,
-                user: currentUser?.id || null,
-                catalogType: orderContext.catalogType,
-                fulfillmentType: orderContext.fulfillmentType,
-                tableNumber: orderContext.tableNumber || "",
-            });
         }
 
         order._mmdOrderContext = orderContext;
         return order;
     } catch (error) {
-        /*
-      در حالت Transaction، خود MongoDB تغییرات را
-      Rollback می‌کند. این Rollback فقط برای حالت
-      MongoDB محلی بدون Transaction است.
-    */
 
         if (!session && appliedPlans.length > 0) {
             await rollbackInventory(appliedPlans);
@@ -829,14 +774,6 @@ export async function calculateOrderQuote({ payload }) {
 
     const commerceSettings = await getCommerceSettings();
 
-    if (!commerceSettings.acceptOrders) {
-        throw new OrderServiceError(
-            "ثبت سفارش موقتاً توسط مدیریت غیرفعال شده است",
-            503,
-            "ORDERS_DISABLED",
-        );
-    }
-
     const requestedItems = normalizeRequestedItems(payload.items);
 
     const productMap = await loadProducts(requestedItems, null);
@@ -844,14 +781,6 @@ export async function calculateOrderQuote({ payload }) {
     const { orderItems, subtotal } = buildOrderItems(requestedItems, productMap);
     const normalizedDelivery = normalizeDelivery(payload, orderContext);
     const deliveryMethod = normalizedDelivery.method;
-
-    if (commerceSettings.minOrderAmount > 0 && subtotal < commerceSettings.minOrderAmount) {
-        throw new OrderServiceError(
-            `حداقل مبلغ سفارش ${commerceSettings.minOrderAmount.toLocaleString("fa-IR")} تومان است`,
-            409,
-            "MINIMUM_ORDER_AMOUNT",
-        );
-    }
 
     const deliveryFee = getDeliveryFee(deliveryMethod, subtotal, commerceSettings);
 

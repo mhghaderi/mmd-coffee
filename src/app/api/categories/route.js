@@ -6,7 +6,7 @@ import Category from "@/models/Category";
 import Product from "@/models/Product";
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
 }
 
 function serializeCategory(category, count = 0) {

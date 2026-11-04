@@ -4,18 +4,13 @@
     --font-sans: var(--font-pelak);
 }
 
-/* ========================================
-   MMD Coffee Design System
-======================================== */
-
 @theme {
-    /* Cream */
+    
     --color-cream-50: #fcfaf7;
     --color-cream-100: #f7f2eb;
     --color-cream-200: #eee4d9;
     --color-cream-300: #dfcfbf;
 
-    /* Coffee */
     --color-coffee-50: #f6f1ed;
     --color-coffee-100: #e9ddd3;
     --color-coffee-200: #d5bfad;
@@ -28,7 +23,6 @@
     --color-coffee-900: #30201a;
     --color-coffee-950: #201510;
 
-    /* Caramel */
     --color-caramel-50: #fdf7f0;
     --color-caramel-100: #faead8;
     --color-caramel-200: #f3d2ad;
@@ -38,18 +32,12 @@
     --color-caramel-600: #ad5e31;
     --color-caramel-700: #8c472a;
 
-    /* Supporting colors */
     --color-success: #287a52;
     --color-danger: #c2413c;
     --color-warning: #d69032;
 
-    /* Typography */
     --font-sans: "Segoe UI", Tahoma, Arial, sans-serif;
 }
-
-/* ========================================
-   Base styles
-======================================== */
 
 *,
 *::before,
@@ -90,7 +78,7 @@ button {
 }
 
 a {
-    /* color: inherit; */
+    
     text-decoration: none;
 }
 
@@ -104,10 +92,6 @@ svg {
     background-color: var(--color-caramel-200);
     color: var(--color-coffee-950);
 }
-
-/* ========================================
-   Reusable helpers
-======================================== */
 
 .page-container {
     width: min(100% - 2rem, 1280px);
@@ -132,10 +116,6 @@ svg {
     }
 }
 
-/* ========================================
-   Hero Section =>  Home
-======================================== */
-
 @keyframes hero-float {
     0%,
     100% {
@@ -156,8 +136,6 @@ svg {
         animation: none;
     }
 }
-
-/* ============= */
 
 @media print {
     body {

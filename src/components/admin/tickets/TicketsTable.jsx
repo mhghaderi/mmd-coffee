@@ -40,8 +40,7 @@ export default function TicketsTable({ tickets }) {
                             <th className="px-4 py-4">دسته</th>
                             <th className="px-4 py-4">اولویت</th>
                             <th className="px-4 py-4">وضعیت</th>
-                            <th className="px-4 py-4">مسئول</th>
-                            <th className="px-4 py-4">آخرین فعالیت</th>
+                                                        <th className="px-4 py-4">آخرین فعالیت</th>
                             <th className="px-5 py-4">عملیات</th>
                         </tr>
                     </thead>
@@ -57,7 +56,7 @@ export default function TicketsTable({ tickets }) {
                                 </td>
                                 <td className="px-4 py-4">
                                     <p className="max-w-64 truncate text-xs font-black text-coffee-900">{ticket.subject}</p>
-                                    <p className="mt-1 text-[10px] text-coffee-400">{ticket.messages?.length || 0} پیام</p>
+                                    <p className="mt-1 text-[10px] text-coffee-400">{ticket.adminReply ? "پاسخ داده شده" : "در انتظار پاسخ"}</p>
                                 </td>
                                 <td className="px-4 py-4 text-xs font-bold text-coffee-600">{ticketCategoryLabels[ticket.category]}</td>
                                 <td className="px-4 py-4">
@@ -70,8 +69,7 @@ export default function TicketsTable({ tickets }) {
                                         {ticketStatusLabels[ticket.status]}
                                     </span>
                                 </td>
-                                <td className="px-4 py-4 text-xs font-bold text-coffee-600">{ticket.assignedTo?.name || "بدون مسئول"}</td>
-                                <td className="px-4 py-4 whitespace-nowrap text-[10px] text-coffee-500">{dateFormatter.format(new Date(ticket.lastMessageAt))}</td>
+                                                                <td className="px-4 py-4 whitespace-nowrap text-[10px] text-coffee-500">{dateFormatter.format(new Date(ticket.repliedAt || ticket.createdAt))}</td>
                                 <td className="px-5 py-4">
                                     <Link href={`/admin/tickets/${ticket._id}`} className="flex size-10 items-center justify-center rounded-xl border border-coffee-100 bg-white text-coffee-600 transition hover:bg-cream-100">
                                         <FiEye />

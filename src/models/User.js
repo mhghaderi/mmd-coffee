@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: [true, "رمز عبور الزامی است"],
-            minlength: [8, "رمز عبور باید حداقل ۸ کاراکتر باشد"],
+            minlength: [4, "رمز عبور باید حداقل ۴ کاراکتر باشد"],
             select: false,
         },
 
@@ -88,31 +88,12 @@ const userSchema = new mongoose.Schema(
     },
 );
 
-/*
-  فقط زمانی که رمز تغییر کرده، دوباره Hash می‌شود.
-*/
-
 userSchema.pre("save", async function () {
     if (!this.isModified("password")) {
         return;
     }
 
-    if (bcrypt.truncates(this.password)) {
-        throw new mongoose.Error.ValidatorError({
-            path: "password",
-            message: "رمز عبور بیش‌ازحد طولانی است؛ حداکثر ظرفیت امن bcrypt رعایت نشده است",
-        });
-    }
-
-    this.password = await bcrypt.hash(this.password, 12);
-
-    /*
-    تغییر رمز باعث باطل‌شدن نشست‌های قبلی می‌شود.
-  */
-
-    if (!this.isNew) {
-        this.tokenVersion += 1;
-    }
+    this.password = await bcrypt.hash(this.password, 10);
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {

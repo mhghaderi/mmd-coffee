@@ -7,9 +7,9 @@ export async function GET() {
     try {
         await connectToDB();
 
-        const products = await Product.find({}).limit(3).lean();
+        const products = await Product.find().limit(3).lean();
 
-        const categories = await Category.find({}).limit(3).lean();
+        const categories = await Category.find().limit(3).lean();
 
         return Response.json({
             products,

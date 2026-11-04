@@ -89,22 +89,6 @@ export async function POST(request) {
     try {
         await connectToDB();
 
-        const settings = await SiteSettings.findOne({ key: "main" })
-            .select("features.ticketsEnabled")
-            .lean();
-
-        if (settings?.features?.ticketsEnabled === false) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "ثبت تیکت موقتاً توسط مدیریت غیرفعال شده است",
-                },
-                {
-                    status: 503,
-                },
-            );
-        }
-
         const body = await request.json();
 
         const subject = cleanText(body.subject, 160);
@@ -170,17 +154,8 @@ export async function POST(request) {
             category,
             priority,
             status: "open",
-            order: order?._id || null,
-            lastMessageAt: now,
-            lastCustomerReplyAt: now,
-            messages: [
-                {
-                    sender: authentication.user.id,
-                    senderRole: "user",
-                    message,
-                    attachments: [],
-                },
-            ],
+            message,
+            adminReply: "",
         });
 
         return Response.json(

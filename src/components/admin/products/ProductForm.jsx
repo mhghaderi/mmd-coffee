@@ -8,8 +8,7 @@ import { useState } from "react";
 
 import {
     FiAlertCircle,
-    FiArchive,
-    FiBox,
+        FiBox,
     FiCheck,
     FiCheckCircle,
     FiChevronDown,
@@ -48,12 +47,6 @@ const statusOptions = [
         title: "منتشرشده",
         description: "محصول در سایت عمومی قابل مشاهده است.",
         icon: FiCheckCircle,
-    },
-    {
-        value: "archived",
-        title: "بایگانی‌شده",
-        description: "محصول غیرفعال و از فروشگاه خارج می‌شود.",
-        icon: FiArchive,
     },
 ];
 
@@ -224,7 +217,7 @@ export default function ProductForm({ mode = "create", categories, initialProduc
 
     const [slugWasEdited, setSlugWasEdited] = useState(mode === "edit");
 
-    const [errors, setErrors] = useState({});
+    const [errors, setErrors] = useState();
 
     const [serverError, setServerError] = useState("");
 
@@ -496,11 +489,11 @@ export default function ProductForm({ mode = "create", categories, initialProduc
 
             stock: form.trackStock ? Number(form.stock) : 0,
 
-            isAvailable: form.status === "archived" ? false : form.isAvailable,
+            isAvailable: form.isAvailable,
 
             status: form.status,
 
-            isFeatured: form.status === "archived" ? false : form.isFeatured,
+            isFeatured: form.isFeatured,
 
             isNew: form.isNew,
 
@@ -586,7 +579,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
 
     return (
         <form onSubmit={handleSubmit} noValidate className="space-y-7">
-            {/* Page heading */}
 
             <section className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -609,8 +601,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                     انصراف و بازگشت
                 </Link>
             </section>
-
-            {/* Server error */}
 
             {serverError && (
                 <div
@@ -638,7 +628,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
             )}
 
             <div className="grid items-start gap-7 xl:grid-cols-[minmax(0,1fr)_330px]">
-                {/* Main form */}
 
                 <div className="space-y-7">
                     <FormSection
@@ -802,8 +791,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                         </div>
                     </FormSection>
 
-                    {/* Price */}
-
                     <FormSection
                         title="قیمت و آماده‌سازی"
                         description="قیمت پایه، تخفیف و زمان آماده‌شدن محصول"
@@ -924,8 +911,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                         </div>
                     </FormSection>
 
-                    {/* Image */}
-
                     <FormSection
                         title="تصاویر محصول"
                         description="آپلود تصویر اصلی دوربری‌شده و تصاویر گالری"
@@ -940,8 +925,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                             onGalleryChange={(value) => updateField("gallery", value)}
                         />
                     </FormSection>
-
-                    {/* Ingredients */}
 
                     <FormSection
                         title="ترکیبات و برچسب‌ها"
@@ -997,8 +980,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                             </div>
                         </div>
                     </FormSection>
-
-                    {/* Variants */}
 
                     <FormSection
                         title="مدل‌ها و اندازه‌ها"
@@ -1125,8 +1106,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                         </div>
                     </FormSection>
 
-                    {/* Add-ons */}
-
                     <FormSection
                         title="افزودنی‌های محصول"
                         description="مانند شات اضافه، سیروپ یا شیر بدون لاکتوز"
@@ -1223,8 +1202,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                         </div>
                     </FormSection>
 
-                    {/* SEO */}
-
                     <FormSection
                         title="تنظیمات سئو"
                         description="عنوان و توضیحی که در نتایج موتورهای جست‌وجو استفاده می‌شود"
@@ -1285,8 +1262,6 @@ export default function ProductForm({ mode = "create", categories, initialProduc
                         </div>
                     </FormSection>
                 </div>
-
-                {/* Sidebar */}
 
                 <aside className="space-y-5 xl:sticky xl:top-28">
                     <section className="rounded-[1.75rem] border border-coffee-100 bg-white p-5 shadow-[0_14px_45px_rgba(48,32,26,0.07)]">

@@ -45,11 +45,6 @@ const adminSections = {
         description: "تحلیل فروش، کاربران و محصولات محبوب",
     },
 
-    archive: {
-        title: "آرشیو",
-        description: "مشاهده و بازیابی اطلاعات بایگانی‌شده",
-    },
-
     settings: {
         title: "تنظیمات",
         description: "مدیریت تنظیمات عمومی سامانه",

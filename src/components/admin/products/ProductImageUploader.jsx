@@ -308,8 +308,6 @@ export default function ProductImageUploader({
         </div>
       )}
 
-      {/* Main image */}
-
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_250px]">
         <div>
           <div className="flex items-end justify-between gap-3">
@@ -415,8 +413,6 @@ export default function ProductImageUploader({
           </div>
         </div>
 
-        {/* Main preview */}
-
         <div>
           <p className="mb-2 text-sm font-bold text-coffee-800">
             پیش‌نمایش تصویر
@@ -448,8 +444,6 @@ export default function ProductImageUploader({
           </div>
         </div>
       </div>
-
-      {/* Gallery */}
 
       <div className="border-t border-coffee-100 pt-7">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

@@ -11,10 +11,6 @@ export default async function UserLayout({ children }) {
         redirect("/login?next=/user");
     }
 
-    if (currentUser.role === "admin") {
-        redirect("/admin");
-    }
-
     return (
         <main className="page-container py-8 sm:py-10">
             <div className="grid gap-6 lg:grid-cols-[250px_minmax(0,1fr)]">

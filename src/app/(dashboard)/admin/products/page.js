@@ -1,4 +1,4 @@
-import { FiArchive, FiBox, FiCheckCircle, FiFileText } from "react-icons/fi";
+import { FiBox, FiCheckCircle, FiFileText } from "react-icons/fi";
 
 import ProductFilters from "@/components/admin/products/ProductFilters";
 import ProductsPagination from "@/components/admin/products/ProductsPagination";
@@ -62,7 +62,7 @@ export default async function AdminProductsPage({ searchParams }) {
                 </p>
             </section>
 
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="grid gap-4 sm:grid-cols-3">
                 <StatCard
                     title="تمام محصولات"
                     value={stats.totalProducts}
@@ -84,12 +84,6 @@ export default async function AdminProductsPage({ searchParams }) {
                     className="bg-amber-50 text-amber-700"
                 />
 
-                <StatCard
-                    title="بایگانی‌شده"
-                    value={stats.archivedProducts}
-                    icon={FiArchive}
-                    className="bg-slate-100 text-slate-600"
-                />
             </section>
 
             <ProductFilters categories={categories} />

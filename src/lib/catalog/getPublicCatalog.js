@@ -67,7 +67,7 @@ function normalizePrice(value) {
 }
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
 }
 
 function createCatalogTypeMatch(catalogType) {

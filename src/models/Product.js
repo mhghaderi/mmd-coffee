@@ -4,55 +4,44 @@ const variantSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: [true, "عنوان مدل محصول الزامی است"],
+            required: true,
             trim: true,
-            maxlength: [50, "عنوان مدل محصول نمی‌تواند بیشتر از ۵۰ کاراکتر باشد"],
         },
-
         priceAdjustment: {
             type: Number,
             default: 0,
-            min: [0, "افزایش قیمت نمی‌تواند منفی باشد"],
+            min: 0,
         },
-
         isDefault: {
             type: Boolean,
             default: false,
         },
-
         isActive: {
             type: Boolean,
             default: true,
         },
     },
-    {
-        timestamps: false,
-    },
+    { _id: true }
 );
 
 const addOnSchema = new mongoose.Schema(
     {
         title: {
             type: String,
-            required: [true, "عنوان افزودنی الزامی است"],
+            required: true,
             trim: true,
-            maxlength: [50, "عنوان افزودنی نمی‌تواند بیشتر از ۵۰ کاراکتر باشد"],
         },
-
         price: {
             type: Number,
             default: 0,
-            min: [0, "قیمت افزودنی نمی‌تواند منفی باشد"],
+            min: 0,
         },
-
         isActive: {
             type: Boolean,
             default: true,
         },
     },
-    {
-        timestamps: false,
-    },
+    { _id: true }
 );
 
 const productSchema = new mongoose.Schema(
@@ -61,14 +50,11 @@ const productSchema = new mongoose.Schema(
             type: String,
             required: [true, "نام محصول الزامی است"],
             trim: true,
-            minlength: [2, "نام محصول باید حداقل ۲ کاراکتر باشد"],
-            maxlength: [100, "نام محصول نمی‌تواند بیشتر از ۱۰۰ کاراکتر باشد"],
         },
 
         englishName: {
             type: String,
             trim: true,
-            maxlength: [100, "نام انگلیسی نمی‌تواند بیشتر از ۱۰۰ کاراکتر باشد"],
             default: "",
         },
 
@@ -78,10 +64,6 @@ const productSchema = new mongoose.Schema(
             unique: true,
             lowercase: true,
             trim: true,
-            match: [
-                /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                "اسلاگ فقط باید شامل حروف انگلیسی کوچک، عدد و خط تیره باشد",
-            ],
         },
 
         category: {
@@ -93,10 +75,7 @@ const productSchema = new mongoose.Schema(
 
         catalogType: {
             type: String,
-            enum: {
-                values: ["cafe", "shop"],
-                message: "نوع محصول باید cafe یا shop باشد",
-            },
+            enum: ["cafe", "shop"],
             default: "cafe",
             index: true,
         },
@@ -104,28 +83,26 @@ const productSchema = new mongoose.Schema(
         shortDescription: {
             type: String,
             trim: true,
-            maxlength: [200, "توضیح کوتاه محصول نمی‌تواند بیشتر از ۲۰۰ کاراکتر باشد"],
             default: "",
         },
 
         description: {
             type: String,
             trim: true,
-            maxlength: [3000, "توضیحات محصول نمی‌تواند بیشتر از ۳۰۰۰ کاراکتر باشد"],
             default: "",
         },
 
         price: {
             type: Number,
             required: [true, "قیمت محصول الزامی است"],
-            min: [0, "قیمت محصول نمی‌تواند منفی باشد"],
+            min: [0, "قیمت نمی‌تواند منفی باشد"],
         },
 
         discountPercent: {
             type: Number,
             default: 0,
-            min: [0, "درصد تخفیف نمی‌تواند کمتر از صفر باشد"],
-            max: [100, "درصد تخفیف نمی‌تواند بیشتر از صد باشد"],
+            min: 0,
+            max: 100,
         },
 
         image: {
@@ -135,48 +112,7 @@ const productSchema = new mongoose.Schema(
         },
 
         gallery: {
-            type: [
-                {
-                    type: String,
-                    trim: true,
-                },
-            ],
-            default: [],
-        },
-
-        preparationTime: {
-            type: Number,
-            min: [0, "زمان آماده‌سازی نمی‌تواند منفی باشد"],
-            default: 0,
-        },
-
-        intensity: {
-            type: String,
-            enum: {
-                values: ["low", "medium", "high"],
-                message: "شدت محصول معتبر نیست",
-            },
-            default: "medium",
-        },
-
-        ingredients: {
-            type: [
-                {
-                    type: String,
-                    trim: true,
-                },
-            ],
-            default: [],
-        },
-
-        tags: {
-            type: [
-                {
-                    type: String,
-                    trim: true,
-                    lowercase: true,
-                },
-            ],
+            type: [String],
             default: [],
         },
 
@@ -190,15 +126,10 @@ const productSchema = new mongoose.Schema(
             default: [],
         },
 
-        trackStock: {
-            type: Boolean,
-            default: false,
-        },
-
         stock: {
             type: Number,
-            min: [0, "موجودی نمی‌تواند منفی باشد"],
-            default: 0,
+            min: 0,
+            default: 10,
         },
 
         isAvailable: {
@@ -209,17 +140,9 @@ const productSchema = new mongoose.Schema(
 
         status: {
             type: String,
-            enum: {
-                values: ["draft", "published", "archived"],
-                message: "وضعیت محصول معتبر نیست",
-            },
-            default: "draft",
+            enum: ["draft", "published"],
+            default: "published",
             index: true,
-        },
-
-        archivedAt: {
-            type: Date,
-            default: null,
         },
 
         isFeatured: {
@@ -232,18 +155,11 @@ const productSchema = new mongoose.Schema(
             default: false,
         },
 
-        accentColor: {
-            type: String,
-            trim: true,
-            default: "#c8793f",
-            match: [/^#[0-9a-fA-F]{6}$/, "رنگ محصول باید به‌صورت کد HEX مانند #c8793f باشد"],
-        },
-
         ratingAverage: {
             type: Number,
             default: 0,
-            min: [0, "امتیاز نمی‌تواند کمتر از صفر باشد"],
-            max: [5, "امتیاز نمی‌تواند بیشتر از پنج باشد"],
+            min: 0,
+            max: 5,
         },
 
         reviewsCount: {
@@ -253,18 +169,6 @@ const productSchema = new mongoose.Schema(
         },
 
         salesCount: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        viewsCount: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        wishlistCount: {
             type: Number,
             default: 0,
             min: 0,
@@ -281,20 +185,6 @@ const productSchema = new mongoose.Schema(
             type: Number,
             default: 0,
         },
-
-        seoTitle: {
-            type: String,
-            trim: true,
-            maxlength: 70,
-            default: "",
-        },
-
-        seoDescription: {
-            type: String,
-            trim: true,
-            maxlength: 180,
-            default: "",
-        },
     },
     {
         timestamps: true,
@@ -302,21 +192,9 @@ const productSchema = new mongoose.Schema(
 );
 
 productSchema.index({
-    name: "text",
-    englishName: "text",
-    shortDescription: "text",
-    tags: "text",
-});
-
-productSchema.index({
     category: 1,
     status: 1,
     isAvailable: 1,
-});
-
-productSchema.index({
-    popularityScore: -1,
-    createdAt: -1,
 });
 
 const Product = mongoose.models.Product || mongoose.model("Product", productSchema);

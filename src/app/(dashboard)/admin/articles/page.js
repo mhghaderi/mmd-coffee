@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import {
-    FiArchive,
     FiCheckCircle,
     FiEdit3,
     FiFileText,
@@ -52,12 +51,11 @@ export default async function AdminArticlesPage({ searchParams }) {
                 </Link>
             </section>
 
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <StatCard title="همه مقالات" value={data.stats.allCount} icon={FiFileText} className="bg-coffee-100 text-coffee-700" />
                 <StatCard title="پیش‌نویس" value={data.stats.draftCount} icon={FiEdit3} className="bg-amber-50 text-amber-700" />
                 <StatCard title="منتشرشده" value={data.stats.publishedCount} icon={FiCheckCircle} className="bg-emerald-50 text-emerald-700" />
-                <StatCard title="بایگانی" value={data.stats.archivedCount} icon={FiArchive} className="bg-slate-50 text-slate-700" />
-                <StatCard title="ویژه" value={data.stats.featuredCount} icon={FiStar} className="bg-violet-50 text-violet-700" />
+                                <StatCard title="ویژه" value={data.stats.featuredCount} icon={FiStar} className="bg-violet-50 text-violet-700" />
                 <StatCard title="این ماه" value={data.stats.monthCount} icon={FiPlus} className="bg-blue-50 text-blue-700" />
             </section>
 

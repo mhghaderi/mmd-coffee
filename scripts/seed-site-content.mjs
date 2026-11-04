@@ -24,11 +24,11 @@ function loadEnvFile(filePath) {
 loadEnvFile(path.join(process.cwd(), ".env.local"));
 loadEnvFile(path.join(process.cwd(), ".env"));
 
-const mongoUrl = process.env.MONGO_URL || process.env.MONGODB_URI || process.env.MONGODB_URL;
-if (!mongoUrl) {
-    console.error("❌ MONGO_URL / MONGODB_URI پیدا نشد.");
-    process.exit(1);
-}
+const mongoUrl =
+    process.env.MONGO_URL ||
+    process.env.MONGODB_URI ||
+    process.env.MONGODB_URL ||
+    "mongodb://127.0.0.1:27017/mmd-coffee";
 
 const navigation = [
     { title: "خانه", href: "/", children: [] },

@@ -123,10 +123,8 @@ export default function ProductReviews({ product }) {
                 content: "",
             }));
 
-            await notifySuccess(
-                "نظر شما ثبت شد",
-                "بعد از بررسی و تأیید مدیر، نظر شما در صفحه محصول نمایش داده می‌شود.",
-            );
+            await notifySuccess("نظر شما با موفقیت ثبت شد");
+            loadReviews();
         } catch (error) {
             notifyError("ثبت نظر انجام نشد", error.message || "دوباره تلاش کن");
         } finally {
@@ -261,11 +259,11 @@ export default function ProductReviews({ product }) {
                                         {review.content}
                                     </p>
 
-                                    {review.adminReply?.message ? (
+                                    {Boolean(review.adminReply?.message || (typeof review.adminReply === "string" && review.adminReply.trim())) ? (
                                         <div className="mt-5 rounded-2xl border border-caramel-100 bg-caramel-50/70 p-4">
                                             <p className="text-[10px] font-black text-caramel-700">پاسخ ممد کافی</p>
                                             <p className="mt-2 whitespace-pre-line text-sm leading-7 text-coffee-700">
-                                                {review.adminReply.message}
+                                                {review.adminReply?.message || review.adminReply}
                                             </p>
                                         </div>
                                     ) : null}

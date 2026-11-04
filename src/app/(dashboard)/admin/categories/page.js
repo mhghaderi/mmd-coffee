@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { FiArchive, FiCheckCircle, FiFolder, FiPackage, FiSlash } from "react-icons/fi";
+import { FiCheckCircle, FiFolder, FiPackage, FiSlash } from "react-icons/fi";
 
 import CategoriesManager from "@/components/admin/categories/CategoriesManager";
 
@@ -45,11 +45,11 @@ export default async function AdminCategoriesPage() {
                 <h1 className="mt-2 text-3xl font-black text-coffee-950">دسته‌بندی‌های ممد کافی</h1>
 
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-coffee-500">
-                    دسته‌بندی‌های فروشگاه را ایجاد، ویرایش، مرتب، غیرفعال یا بایگانی کن.
+                    دسته‌بندی‌های فروشگاه را ایجاد، ویرایش، مرتب یا حذف کن.
                 </p>
             </section>
 
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard
                     title="تمام دسته‌بندی‌ها"
                     value={data.stats.total}
@@ -69,13 +69,6 @@ export default async function AdminCategoriesPage() {
                     value={data.stats.inactive}
                     icon={FiSlash}
                     className="bg-amber-50 text-amber-700"
-                />
-
-                <StatCard
-                    title="بایگانی‌شده"
-                    value={data.stats.archived}
-                    icon={FiArchive}
-                    className="bg-slate-100 text-slate-600"
                 />
 
                 <StatCard

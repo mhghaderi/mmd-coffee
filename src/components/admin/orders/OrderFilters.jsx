@@ -57,7 +57,6 @@ export default function OrderFilters() {
 
         return () => window.clearTimeout(timer);
 
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchValue, currentSearch]);
 
     const resetFilters = () => {

@@ -29,7 +29,7 @@ export default async function getAdminCategories() {
 
     await connectToDB();
 
-    const categories = await Category.find({})
+    const categories = await Category.find()
         .sort({
             archivedAt: 1,
             displayOrder: 1,
@@ -77,8 +77,6 @@ export default async function getAdminCategories() {
 
             inactive: categories.filter((category) => !category.archivedAt && !category.isActive)
                 .length,
-
-            archived: categories.filter((category) => Boolean(category.archivedAt)).length,
 
             assignedProducts: serializedCategories.reduce(
                 (total, category) => total + category.productCount,

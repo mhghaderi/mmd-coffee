@@ -206,7 +206,7 @@ export default function ArticleForm({ article = null }) {
                             >
                                 <option value="draft">پیش‌نویس</option>
                                 <option value="published">منتشرشده</option>
-                                <option value="archived">بایگانی‌شده</option>
+                                
                             </select>
                         </label>
 

@@ -147,7 +147,6 @@ export default async function AdminOrderDetailsPage({ params }) {
 
     return (
         <div className="space-y-7">
-            {/* Heading */}
 
             <section className="flex flex-col gap-5 print:hidden sm:flex-row sm:items-end sm:justify-between">
                 <div>
@@ -183,8 +182,6 @@ export default async function AdminOrderDetailsPage({ params }) {
                 </div>
             </section>
 
-            {/* Print heading */}
-
             <section className="hidden border-b border-coffee-200 pb-5 print:block">
                 <p className="text-sm font-black">ممد کافی | MMD Coffee</p>
 
@@ -194,8 +191,6 @@ export default async function AdminOrderDetailsPage({ params }) {
 
                 <p className="mt-2 text-xs">{dateFormatter.format(new Date(order.createdAt))}</p>
             </section>
-
-            {/* Summary */}
 
             <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <article className="flex items-center gap-4 rounded-[1.5rem] border border-coffee-100 bg-white p-4">
@@ -259,10 +254,8 @@ export default async function AdminOrderDetailsPage({ params }) {
             </section>
 
             <div className="grid items-start gap-7 xl:grid-cols-[minmax(0,1fr)_360px]">
-                {/* Main content */}
 
                 <div className="space-y-7">
-                    {/* Products */}
 
                     <SectionCard
                         title="محصولات سفارش"
@@ -383,8 +376,6 @@ export default async function AdminOrderDetailsPage({ params }) {
                         </div>
                     </SectionCard>
 
-                    {/* Pricing */}
-
                     <SectionCard
                         title="صورتحساب"
                         description="خلاصه مالی سفارش"
@@ -436,8 +427,6 @@ export default async function AdminOrderDetailsPage({ params }) {
                         </div>
                     </SectionCard>
 
-                    {/* Histories */}
-
                     <div className="grid gap-7 lg:grid-cols-2">
                         <SectionCard title="تاریخچه سفارش" icon={FiClock}>
                             <OrderHistory history={order.statusHistory} type="order" />
@@ -452,8 +441,6 @@ export default async function AdminOrderDetailsPage({ params }) {
                         </SectionCard>
                     </div>
                 </div>
-
-                {/* Sidebar */}
 
                 <aside className="space-y-6 xl:sticky xl:top-28">
                     <SectionCard title="اطلاعات مشتری" icon={FiUser}>

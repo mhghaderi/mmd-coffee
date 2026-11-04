@@ -11,7 +11,7 @@ import {
 } from "react";
 
 import {
-  FiArchive,
+  FiTrash2,
   FiCheckCircle,
   FiEdit3,
   FiFileText,
@@ -50,29 +50,15 @@ const actionConfigurations = {
       "bg-amber-600 hover:bg-amber-700",
   },
 
-  archive: {
-    title: "بایگانی محصول",
+  delete: {
+    title: "حذف محصول",
     description:
-      "محصول حذف دائمی نمی‌شود، اما از سایت و فهرست محصولات فعال خارج خواهد شد.",
-    confirmTitle: "بایگانی محصول",
+      "محصول برای همیشه از سیستم حذف خواهد شد.",
+    confirmTitle: "حذف محصول",
     method: "DELETE",
     body: null,
     className:
       "bg-red-600 hover:bg-red-700",
-  },
-
-  restore: {
-    title: "بازیابی محصول",
-    description:
-      "محصول به حالت پیش‌نویس بازگردانده می‌شود و پس از بررسی می‌توانی دوباره آن را منتشر کنی.",
-    confirmTitle: "بازیابی محصول",
-    method: "PATCH",
-    body: {
-      status: "draft",
-      isAvailable: false,
-    },
-    className:
-      "bg-coffee-900 hover:bg-coffee-800",
   },
 };
 
@@ -262,37 +248,20 @@ export default function ProductActions({
             </button>
           )}
 
-          {product.status === "archived" ? (
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setSelectedAction("restore");
-                setIsMenuOpen(false);
-              }}
-              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-right text-xs font-bold text-coffee-700 transition hover:bg-cream-100"
-            >
-              <FiRotateCcw />
-              بازیابی محصول
-            </button>
-          ) : (
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                setSelectedAction("archive");
-                setIsMenuOpen(false);
-              }}
-              className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-right text-xs font-bold text-red-600 transition hover:bg-red-50"
-            >
-              <FiArchive />
-              بایگانی محصول
-            </button>
-          )}
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setSelectedAction("delete");
+              setIsMenuOpen(false);
+            }}
+            className="flex h-11 w-full items-center gap-3 rounded-xl px-3 text-right text-xs font-bold text-red-600 transition hover:bg-red-50"
+          >
+            <FiTrash2 />
+            حذف محصول
+          </button>
         </div>
       </div>
-
-      {/* Confirmation dialog */}
 
       {action && (
         <div

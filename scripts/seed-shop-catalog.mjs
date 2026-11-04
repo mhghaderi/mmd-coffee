@@ -362,7 +362,7 @@ function withSubdocumentIds(items = []) {
 }
 
 async function run() {
-    await mongoose.connect(process.env.MONGO_URL);
+    await mongoose.connect(mongoUrl);
 
     const database = mongoose.connection.db;
     const categoriesCollection = database.collection("categories");
@@ -382,7 +382,7 @@ async function run() {
                 $set: {
                     ...category,
                     isActive: true,
-                    archivedAt: null,
+                    
                     updatedAt: now,
                 },
                 $setOnInsert: {
@@ -420,7 +420,7 @@ async function run() {
                     trackStock: true,
                     isAvailable: true,
                     status: "published",
-                    archivedAt: null,
+                    
                     viewsCount: current?.viewsCount || 0,
                     wishlistCount: current?.wishlistCount || 0,
                     seoTitle: product.name,

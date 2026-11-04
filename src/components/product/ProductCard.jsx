@@ -132,6 +132,7 @@ export default function ProductCard({
                         alt={product.imageAlt || `تصویر ${product.name}`}
                         fill
                         sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 30vw"
+                        unoptimized={Boolean(typeof image === "string" && image.startsWith("http"))}
                         className="object-contain p-8 drop-shadow-[0_25px_25px_rgba(48,32,26,0.22)] transition-transform duration-700 group-hover:scale-110 group-hover:-rotate-2"
                     />
                 </Link>

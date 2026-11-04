@@ -122,7 +122,7 @@ export async function GET() {
         const settings = await SiteSettings.findOneAndUpdate(
             { key: "main" },
             { $setOnInsert: { key: "main" } },
-            { new: true, upsert: true, setDefaultsOnInsert: true },
+            { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true },
         ).lean();
 
         return Response.json({

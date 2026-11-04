@@ -35,7 +35,7 @@ export default function TicketFilters() {
 
         const timer = window.setTimeout(() => updateFilters({ q: normalized || null }), 400);
         return () => window.clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [searchValue, currentSearch]);
 
     return (
@@ -62,7 +62,7 @@ export default function TicketFilters() {
                         <option value="all">همه وضعیت‌ها</option>
                         <option value="open">باز</option>
                         <option value="answered">پاسخ داده‌شده</option>
-                        <option value="customer-reply">پاسخ جدید مشتری</option>
+                        
                         <option value="closed">بسته‌شده</option>
                     </select>
 
@@ -83,13 +83,6 @@ export default function TicketFilters() {
                         <option value="technical">مشکل فنی</option>
                         <option value="suggestion">پیشنهاد</option>
                         <option value="other">سایر</option>
-                    </select>
-
-                    <select value={searchParams.get("assignment") || "all"} onChange={(event) => updateFilters({ assignment: event.target.value })} className={`${selectClass} xl:w-36`}>
-                        <option value="all">همه ارجاع‌ها</option>
-                        <option value="mine">ارجاع‌شده به من</option>
-                        <option value="assigned">ارجاع‌شده</option>
-                        <option value="unassigned">بدون مسئول</option>
                     </select>
 
                     <select value={searchParams.get("sort") || "activity"} onChange={(event) => updateFilters({ sort: event.target.value })} className={`${selectClass} xl:w-36`}>

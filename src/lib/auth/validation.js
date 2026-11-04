@@ -1,5 +1,3 @@
-import bcrypt from "bcryptjs";
-
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function normalizeEmail(value) {
@@ -19,24 +17,12 @@ export function validateEmail(email) {
 }
 
 export function validatePassword(password) {
-    if (typeof password !== "string") {
+    if (typeof password !== "string" || !password) {
         return "رمز عبور الزامی است";
     }
 
-    if (password.length < 8) {
-        return "رمز عبور باید حداقل ۸ کاراکتر باشد";
-    }
-
-    if (bcrypt.truncates(password)) {
-        return "رمز عبور بیش‌ازحد طولانی است";
-    }
-
-    if (!/\p{L}/u.test(password)) {
-        return "رمز عبور باید حداقل یک حرف داشته باشد";
-    }
-
-    if (!/\p{N}/u.test(password)) {
-        return "رمز عبور باید حداقل یک عدد داشته باشد";
+    if (password.length < 4) {
+        return "رمز عبور باید حداقل ۴ کاراکتر باشد";
     }
 
     return null;
@@ -46,16 +32,16 @@ export function serializeUser(user) {
     const userObject = typeof user?.toObject === "function" ? user.toObject() : user;
 
     return {
-        id: userObject._id.toString(),
+        id: (userObject._id || userObject.id).toString(),
         name: userObject.name,
         email: userObject.email,
-        role: userObject.role,
+        role: userObject.role || "user",
         phone: userObject.phone || "",
         avatar: userObject.avatar || "",
-        isActive: userObject.isActive,
-        emailVerified: userObject.emailVerified,
-        lastLoginAt: userObject.lastLoginAt,
-        createdAt: userObject.createdAt,
-        updatedAt: userObject.updatedAt,
+        isActive: userObject.isActive !== false,
+        emailVerified: Boolean(userObject.emailVerified),
+        lastLoginAt: userObject.lastLoginAt ? new Date(userObject.lastLoginAt).toISOString() : null,
+        createdAt: userObject.createdAt ? new Date(userObject.createdAt).toISOString() : null,
+        updatedAt: userObject.updatedAt ? new Date(userObject.updatedAt).toISOString() : null,
     };
 }

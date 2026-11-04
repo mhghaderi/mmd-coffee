@@ -55,7 +55,7 @@ function haveSameProducts(firstIds, secondIds) {
 }
 
 function selectFeaturedProducts(products, previousIds = [], count = 3) {
-    // Pool از خود MongoDB می‌آید. فقط بهترین‌ها اجازه ورود به قرعه سه‌تایی را دارند.
+    
     const popularPool = [...products]
         .filter((product) => product && product.isAvailable !== false && product.status !== "draft")
         .sort((first, second) => getPopularityScore(second) - getPopularityScore(first))
@@ -182,7 +182,7 @@ export default function Hero({ products = [], content = {} }) {
 
     return (
         <section className="relative isolate min-h-[calc(100svh-76px)] overflow-hidden">
-            {/* همان طراحی اصلی Hero پروژه؛ فقط منبع داده از MongoDB است. */}
+            
             <div
                 aria-hidden="true"
                 className="pointer-events-none absolute -right-36 -top-40 size-[420px] rounded-full bg-caramel-200/40 blur-3xl"
@@ -362,6 +362,7 @@ export default function Hero({ products = [], content = {} }) {
                                         alt={activeProduct.imageAlt || `تصویر ${activeProduct.name}`}
                                         fill
                                         priority
+                                        unoptimized={Boolean(typeof activeProduct?.image === "string" && activeProduct.image.startsWith("http"))}
                                         sizes="(max-width: 768px) 65vw, 420px"
                                         className="object-contain drop-shadow-[0_30px_35px_rgba(0,0,0,0.38)]"
                                     />

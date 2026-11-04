@@ -48,15 +48,15 @@ export default function LatestArticles({ articles = [], content = {} }) {
                         <Link href={`/blog/${article.slug}`} className="block">
                             <div className="relative aspect-[16/9] overflow-hidden bg-cream-100">
                                 {article.coverImage ? (
-                                    <Image
+                                    <img
                                         src={article.coverImage}
                                         alt={article.coverImageAlt || article.title}
-                                        fill
-                                        sizes="(max-width: 768px) 94vw, 33vw"
-                                        className="object-cover transition duration-700 group-hover:scale-105"
+                                        className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                                     />
                                 ) : (
-                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(196,125,75,0.35),transparent_48%),linear-gradient(145deg,#2c1b16,#55362b)]" />
+                                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(196,125,75,0.35),transparent_48%),linear-gradient(145deg,#2c1b16,#55362b)] flex items-center justify-center text-white/40">
+                                        <FiCoffee size={36} />
+                                    </div>
                                 )}
                             </div>
 

@@ -39,7 +39,7 @@ export default function ArticleFilters() {
         );
 
         return () => window.clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [searchValue, currentSearch]);
 
     const activeCount = [
@@ -82,7 +82,7 @@ export default function ArticleFilters() {
                         <option value="all">همه وضعیت‌ها</option>
                         <option value="draft">پیش‌نویس</option>
                         <option value="published">منتشرشده</option>
-                        <option value="archived">بایگانی‌شده</option>
+                        
                     </select>
 
                     <select

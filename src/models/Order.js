@@ -1,142 +1,43 @@
 import mongoose from "mongoose";
 
-import {
-    DELIVERY_METHOD_VALUES,
-    ORDER_STATUS,
-    ORDER_STATUS_VALUES,
-    PAYMENT_METHOD_VALUES,
-    PAYMENT_STATUS,
-    PAYMENT_STATUS_VALUES,
-} from "@/constants/order";
-
-const selectedVariantSchema = new mongoose.Schema(
+const orderItemSchema = new mongoose.Schema(
     {
-        originalId: {
+        product: {
             type: mongoose.Schema.Types.ObjectId,
-            default: null,
+            ref: "Product",
+            required: true,
         },
-
-        title: {
+        name: {
             type: String,
-            trim: true,
+            required: true,
+        },
+        slug: {
+            type: String,
             default: "",
         },
-
-        priceAdjustment: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-    },
-    {
-        _id: false,
-    },
-);
-
-const selectedAddOnSchema = new mongoose.Schema(
-    {
-        originalId: {
-            type: mongoose.Schema.Types.ObjectId,
-            default: null,
-        },
-
-        title: {
+        image: {
             type: String,
-            required: true,
-            trim: true,
+            default: "",
         },
-
-        price: {
+        quantity: {
+            type: Number,
+            required: true,
+            min: 1,
+            default: 1,
+        },
+        unitPrice: {
+            type: Number,
+            required: true,
+            min: 0,
+        },
+        lineTotal: {
             type: Number,
             required: true,
             min: 0,
         },
     },
-    {
-        _id: false,
-    },
+    { _id: false }
 );
-
-const orderItemSchema = new mongoose.Schema({
-    product: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product",
-        required: true,
-        index: true,
-    },
-
-    name: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-
-    englishName: {
-        type: String,
-        trim: true,
-        default: "",
-    },
-
-    slug: {
-        type: String,
-        required: true,
-        trim: true,
-    },
-
-    image: {
-        type: String,
-        trim: true,
-        default: "",
-    },
-
-    quantity: {
-        type: Number,
-        required: true,
-        min: 1,
-        max: 20,
-    },
-
-    basePrice: {
-        type: Number,
-        required: true,
-        min: 0,
-    },
-
-    discountPercent: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 100,
-    },
-
-    discountedBasePrice: {
-        type: Number,
-        required: true,
-        min: 0,
-    },
-
-    variant: {
-        type: selectedVariantSchema,
-        default: null,
-    },
-
-    addOns: {
-        type: [selectedAddOnSchema],
-        default: [],
-    },
-
-    unitPrice: {
-        type: Number,
-        required: true,
-        min: 0,
-    },
-
-    lineTotal: {
-        type: Number,
-        required: true,
-        min: 0,
-    },
-});
 
 const customerSchema = new mongoose.Schema(
     {
@@ -144,206 +45,91 @@ const customerSchema = new mongoose.Schema(
             type: String,
             required: true,
             trim: true,
-            maxlength: 80,
         },
-
         email: {
             type: String,
             trim: true,
-            lowercase: true,
-            maxlength: 150,
             default: "",
         },
-
         phone: {
             type: String,
             required: true,
             trim: true,
-            maxlength: 20,
         },
     },
-    {
-        _id: false,
-    },
+    { _id: false }
 );
 
 const deliverySchema = new mongoose.Schema(
     {
         method: {
             type: String,
-            enum: DELIVERY_METHOD_VALUES,
-            required: true,
+            default: "delivery",
         },
-
         province: {
             type: String,
-            trim: true,
-            maxlength: 80,
-            default: "",
+            default: "تهران",
         },
-
         city: {
             type: String,
-            trim: true,
-            maxlength: 80,
-            default: "",
+            default: "تهران",
         },
-
         addressLine: {
             type: String,
-            trim: true,
-            maxlength: 500,
-            default: "",
-        },
-
-        postalCode: {
-            type: String,
-            trim: true,
-            maxlength: 20,
-            default: "",
-        },
-
-        plaque: {
-            type: String,
-            trim: true,
-            maxlength: 20,
-            default: "",
-        },
-
-        unit: {
-            type: String,
-            trim: true,
-            maxlength: 20,
             default: "",
         },
     },
-    {
-        _id: false,
-    },
+    { _id: false }
 );
 
 const pricingSchema = new mongoose.Schema(
     {
         subtotal: {
             type: Number,
-            required: true,
-            min: 0,
+            default: 0,
         },
-
         deliveryFee: {
             type: Number,
             default: 0,
-            min: 0,
         },
-
         discountAmount: {
             type: Number,
             default: 0,
-            min: 0,
         },
-
         total: {
             type: Number,
             required: true,
-            min: 0,
         },
-
         priceUnit: {
             type: String,
-            enum: ["toman"],
             default: "toman",
         },
     },
-    {
-        _id: false,
-    },
+    { _id: false }
 );
 
 const paymentSchema = new mongoose.Schema(
     {
         method: {
             type: String,
-            enum: PAYMENT_METHOD_VALUES,
-            required: true,
+            default: "online",
         },
-
         status: {
             type: String,
-            enum: PAYMENT_STATUS_VALUES,
-            default: PAYMENT_STATUS.UNPAID,
+            default: "paid",
         },
-
         transactionId: {
             type: String,
-            trim: true,
             default: "",
         },
-
         paidAt: {
             type: Date,
             default: null,
         },
     },
-    {
-        _id: false,
-    },
+    { _id: false }
 );
 
-const statusHistorySchema = new mongoose.Schema({
-    status: {
-        type: String,
-        enum: ORDER_STATUS_VALUES,
-        required: true,
-    },
-
-    note: {
-        type: String,
-        trim: true,
-        maxlength: 500,
-        default: "",
-    },
-
-    changedBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        default: null,
-    },
-
-    changedAt: {
-        type: Date,
-        default: Date.now,
-    },
-});
-const paymentHistorySchema = new mongoose.Schema(
-    {
-        status: {
-            type: String,
-            enum: PAYMENT_STATUS_VALUES,
-            required: true,
-        },
-
-        note: {
-            type: String,
-            trim: true,
-            maxlength: 500,
-            default: "",
-        },
-
-        changedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            default: null,
-        },
-
-        changedAt: {
-            type: Date,
-            default: Date.now,
-        },
-    },
-    {
-        _id: true,
-    },
-);
 const orderSchema = new mongoose.Schema(
     {
         orderNumber: {
@@ -351,7 +137,6 @@ const orderSchema = new mongoose.Schema(
             required: true,
             unique: true,
             trim: true,
-            uppercase: true,
         },
 
         user: {
@@ -369,19 +154,11 @@ const orderSchema = new mongoose.Schema(
         items: {
             type: [orderItemSchema],
             required: true,
-
-            validate: {
-                validator(items) {
-                    return Array.isArray(items) && items.length > 0;
-                },
-
-                message: "سفارش باید حداقل یک محصول داشته باشد",
-            },
         },
 
         delivery: {
             type: deliverySchema,
-            required: true,
+            default: () => ({}),
         },
 
         pricing: {
@@ -391,86 +168,40 @@ const orderSchema = new mongoose.Schema(
 
         payment: {
             type: paymentSchema,
-            required: true,
+            default: () => ({}),
         },
-        paymentHistory: {
-            type: [paymentHistorySchema],
-            default: [],
-        },
+
         status: {
             type: String,
-            enum: ORDER_STATUS_VALUES,
-            default: ORDER_STATUS.PENDING,
+            enum: ["pending", "confirmed", "preparing", "ready", "out-for-delivery", "completed", "cancelled"],
+            default: "pending",
             index: true,
         },
 
-        statusHistory: {
-            type: [statusHistorySchema],
-            default: [],
+        catalogType: {
+            type: String,
+            default: "shop",
+        },
+
+        fulfillmentType: {
+            type: String,
+            default: "delivery",
+        },
+
+        tableNumber: {
+            type: String,
+            default: "",
         },
 
         customerNote: {
             type: String,
-            trim: true,
-            maxlength: 1000,
-            default: "",
-        },
-
-        adminNote: {
-            type: String,
-            trim: true,
-            maxlength: 2000,
-            default: "",
-        },
-
-        source: {
-            type: String,
-            enum: ["web", "admin"],
-            default: "web",
-        },
-
-        inventoryRestored: {
-            type: Boolean,
-            default: false,
-        },
-
-        salesApplied: {
-            type: Boolean,
-            default: false,
-        },
-
-        confirmedAt: {
-            type: Date,
-            default: null,
-        },
-
-        completedAt: {
-            type: Date,
-            default: null,
-        },
-
-        cancelledAt: {
-            type: Date,
-            default: null,
-        },
-
-        cancellationReason: {
-            type: String,
-            trim: true,
-            maxlength: 500,
             default: "",
         },
     },
     {
         timestamps: true,
-        optimisticConcurrency: true,
-    },
+    }
 );
-
-orderSchema.index({
-    status: 1,
-    createdAt: -1,
-});
 
 orderSchema.index({
     user: 1,
@@ -478,12 +209,7 @@ orderSchema.index({
 });
 
 orderSchema.index({
-    "customer.phone": 1,
-    createdAt: -1,
-});
-
-orderSchema.index({
-    "payment.status": 1,
+    status: 1,
     createdAt: -1,
 });
 

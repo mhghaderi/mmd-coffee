@@ -67,8 +67,8 @@ export async function GET() {
             authenticated: true,
             data: {
                 wishlist,
-                categoryScores: JSON.parse(JSON.stringify(preference.categoryScores || [])),
-                productSignals: JSON.parse(JSON.stringify(preference.productSignals || [])),
+                categoryScores: [],
+                productSignals: [],
             },
         });
     } catch (error) {

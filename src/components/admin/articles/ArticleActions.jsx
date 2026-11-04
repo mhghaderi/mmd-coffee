@@ -2,14 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { FiArchive, FiLoader } from "react-icons/fi";
+import { FiLoader, FiTrash2 } from "react-icons/fi";
 
 export default function ArticleActions({ article }) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(false);
 
-    const archive = async () => {
-        if (!window.confirm("این مقاله بایگانی شود؟")) return;
+    const deleteArticle = async () => {
+        if (!window.confirm("آیا از حذف این مقاله اطمینان دارید؟")) return;
 
         setIsLoading(true);
 
@@ -21,7 +21,7 @@ export default function ArticleActions({ article }) {
             const payload = await response.json();
 
             if (!response.ok) {
-                throw new Error(payload.message || "بایگانی مقاله انجام نشد");
+                throw new Error(payload.message || "حذف مقاله انجام نشد");
             }
 
             router.refresh();
@@ -35,12 +35,12 @@ export default function ArticleActions({ article }) {
     return (
         <button
             type="button"
-            onClick={archive}
-            disabled={isLoading || article.status === "archived"}
+            onClick={deleteArticle}
+            disabled={isLoading}
             className="flex size-10 items-center justify-center rounded-xl border border-coffee-100 bg-white text-red-600 transition hover:bg-red-50 disabled:opacity-30"
-            aria-label="بایگانی مقاله"
+            aria-label="حذف مقاله"
         >
-            {isLoading ? <FiLoader className="animate-spin" /> : <FiArchive />}
+            {isLoading ? <FiLoader className="animate-spin" /> : <FiTrash2 />}
         </button>
     );
 }

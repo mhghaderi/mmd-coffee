@@ -305,40 +305,11 @@ export async function DELETE(request, { params }) {
             category: category._id,
         });
 
-        if (category.archivedAt) {
-            return Response.json({
-                success: true,
-                message: "این دسته‌بندی قبلاً بایگانی شده است",
-                data: {
-                    ...category.toObject(),
-                    productCount,
-                },
-            });
-        }
-
-        /*
-      دسته‌بندی حذف دائمی نمی‌شود تا ارتباط
-      محصولات قبلی از بین نرود.
-    */
-
-        category.archivedAt = new Date();
-        category.isActive = false;
-
-        await category.save();
+        await Category.findByIdAndDelete(category._id);
 
         return Response.json({
             success: true,
-            message:
-                productCount > 0
-                    ? `دسته‌بندی بایگانی شد و ارتباط ${productCount.toLocaleString(
-                          "fa-IR",
-                      )} محصول حفظ شد`
-                    : "دسته‌بندی با موفقیت بایگانی شد",
-
-            data: {
-                ...category.toObject(),
-                productCount,
-            },
+            message: "دسته‌بندی با موفقیت حذف شد",
         });
     } catch (error) {
         return createErrorResponse(error, "بایگانی دسته‌بندی انجام نشد");

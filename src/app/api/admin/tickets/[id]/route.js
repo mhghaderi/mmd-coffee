@@ -50,6 +50,12 @@ export async function PATCH(request, { params }) {
 
         const body = await request.json();
 
+                if (Object.hasOwn(body, "adminReply")) {
+            ticket.adminReply = typeof body.adminReply === "string" ? body.adminReply.trim() : "";
+            ticket.repliedAt = new Date();
+            ticket.status = body.status || "answered";
+        }
+
         if (Object.hasOwn(body, "status")) {
             if (!TICKET_STATUS_VALUES.includes(body.status)) {
                 return Response.json(
@@ -83,45 +89,7 @@ export async function PATCH(request, { params }) {
             ticket.priority = body.priority;
         }
 
-        if (Object.hasOwn(body, "assignedTo")) {
-            const assignedTo = typeof body.assignedTo === "string" ? body.assignedTo.trim() : "";
-
-            if (!assignedTo) {
-                ticket.assignedTo = null;
-            } else {
-                if (!mongoose.isValidObjectId(assignedTo)) {
-                    return Response.json(
-                        {
-                            success: false,
-                            message: "شناسه مدیر معتبر نیست",
-                        },
-                        {
-                            status: 400,
-                        },
-                    );
-                }
-
-                const adminExists = await User.exists({
-                    _id: assignedTo,
-                    role: "admin",
-                    isActive: true,
-                });
-
-                if (!adminExists) {
-                    return Response.json(
-                        {
-                            success: false,
-                            message: "مدیر انتخاب‌شده پیدا نشد",
-                        },
-                        {
-                            status: 404,
-                        },
-                    );
-                }
-
-                ticket.assignedTo = assignedTo;
-            }
-        }
+        
 
         await ticket.save();
 
@@ -156,6 +124,39 @@ export async function PATCH(request, { params }) {
             {
                 status: 500,
             },
+        );
+    }
+}
+
+export async function DELETE(request, { params }) {
+    const authorization = await requireAdmin();
+
+    if (!authorization.ok) {
+        return authorization.response;
+    }
+
+    try {
+        await connectToDB();
+
+        const { id } = await params;
+        const ticket = await Ticket.findOneAndDelete(createTicketFilter(id));
+
+        if (!ticket) {
+            return Response.json(
+                { success: false, message: "تیکت پیدا نشد" },
+                { status: 404 },
+            );
+        }
+
+        return Response.json({
+            success: true,
+            message: "تیکت با موفقیت حذف شد",
+        });
+    } catch (error) {
+        console.error("DELETE ADMIN TICKET ERROR:", error);
+        return Response.json(
+            { success: false, message: "حذف تیکت انجام نشد" },
+            { status: 500 },
         );
     }
 }

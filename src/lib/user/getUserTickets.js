@@ -16,8 +16,8 @@ export default async function getUserTickets(rawSearchParams = {}) {
     const pages = total ? Math.ceil(total / limit) : 0;
     const safePage = pages ? Math.min(page, pages) : 1;
     const tickets = await Ticket.find({ user: currentUser.id })
-        .select("ticketNumber subject category priority status lastMessageAt lastCustomerReplyAt lastAdminReplyAt createdAt updatedAt")
-        .sort({ lastMessageAt: -1, _id: -1 })
+        .select("ticketNumber subject category priority status message adminReply repliedAt createdAt updatedAt")
+        .sort({ createdAt: -1, _id: -1 })
         .skip((safePage - 1) * limit)
         .limit(limit)
         .lean();

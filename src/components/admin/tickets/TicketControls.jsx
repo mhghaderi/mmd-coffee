@@ -13,7 +13,7 @@ export default function TicketControls({ ticket, admins }) {
     const [form, setForm] = useState({
         status: ticket.status,
         priority: ticket.priority,
-        assignedTo: ticket.assignedTo?._id || "",
+        
     });
 
     const save = async () => {
@@ -63,15 +63,7 @@ export default function TicketControls({ ticket, admins }) {
                 </select>
             </label>
 
-            <label className="block space-y-2">
-                <span className="text-xs font-bold text-coffee-600">مسئول رسیدگی</span>
-                <select value={form.assignedTo} onChange={(event) => setForm((current) => ({ ...current, assignedTo: event.target.value }))} className={selectClass}>
-                    <option value="">بدون مسئول</option>
-                    {admins.map((admin) => (
-                        <option key={admin._id} value={admin._id}>{admin.name}</option>
-                    ))}
-                </select>
-            </label>
+            
 
             {message && <p className="rounded-xl bg-cream-100 px-3 py-2 text-xs font-bold text-coffee-700">{message}</p>}
 

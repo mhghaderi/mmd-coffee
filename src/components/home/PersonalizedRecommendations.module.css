@@ -152,7 +152,6 @@
     padding: 2px 0 8px;
 }
 
-/* Swiper's structural CSS, kept local so the component works even without importing swiper/css globally. */
 :global(.mmd-recommendations-swiper) {
     position: relative;
     overflow: hidden;

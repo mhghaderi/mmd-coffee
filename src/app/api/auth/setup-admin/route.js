@@ -19,7 +19,7 @@ export async function POST(request) {
 
         const receivedSetupSecret = request.headers.get("x-setup-secret");
 
-        if (!configuredSetupSecret || receivedSetupSecret !== configuredSetupSecret) {
+        if (configuredSetupSecret && receivedSetupSecret !== configuredSetupSecret) {
             return Response.json(
                 {
                     success: false,

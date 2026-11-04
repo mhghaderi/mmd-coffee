@@ -45,10 +45,6 @@ export async function POST(request) {
             email,
         }).select("+password");
 
-        /*
-      پیام خطا عمداً برای ایمیل اشتباه و رمز اشتباه یکسان است.
-    */
-
         if (!user) {
             return Response.json(
                 {

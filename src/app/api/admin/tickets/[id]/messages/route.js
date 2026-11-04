@@ -71,9 +71,7 @@ export async function POST(request, { params }) {
         ticket.status = body.closeAfterReply === true ? "closed" : "answered";
         ticket.closedAt = body.closeAfterReply === true ? now : null;
 
-        if (!ticket.assignedTo) {
-            ticket.assignedTo = authorization.user.id;
-        }
+
 
         await ticket.save();
 

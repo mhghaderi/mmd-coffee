@@ -16,7 +16,7 @@ export default async function getSiteSettings() {
         { key: "main" },
         { $setOnInsert: { key: "main" } },
         {
-            new: true,
+            returnDocument: 'after',
             upsert: true,
             setDefaultsOnInsert: true,
         },

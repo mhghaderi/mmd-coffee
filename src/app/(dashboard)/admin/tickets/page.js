@@ -1,10 +1,8 @@
 import { redirect } from "next/navigation";
 import {
-    FiAlertTriangle,
     FiCheckCircle,
     FiClock,
     FiInbox,
-    FiMessageCircle,
     FiXCircle,
 } from "react-icons/fi";
 
@@ -40,17 +38,15 @@ export default async function AdminTicketsPage({ searchParams }) {
                 <p className="text-xs font-bold text-caramel-600">پشتیبانی مشتریان</p>
                 <h1 className="mt-2 text-3xl font-black text-coffee-950">مدیریت تیکت‌ها</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-coffee-500">
-                    درخواست‌های کاربران را اولویت‌بندی، ارجاع، پاسخ و پیگیری کن.
+                    پیام‌ها و درخواست‌های کاربران را بررسی و به آن‌ها پاسخ دهید.
                 </p>
             </section>
 
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard title="همه تیکت‌ها" value={data.stats.allCount} icon={FiInbox} className="bg-coffee-100 text-coffee-700" />
-                <StatCard title="باز" value={data.stats.openCount} icon={FiClock} className="bg-blue-50 text-blue-700" />
+                <StatCard title="در انتظار پاسخ" value={data.stats.openCount} icon={FiClock} className="bg-blue-50 text-blue-700" />
                 <StatCard title="پاسخ داده‌شده" value={data.stats.answeredCount} icon={FiCheckCircle} className="bg-emerald-50 text-emerald-700" />
-                <StatCard title="پاسخ جدید مشتری" value={data.stats.customerReplyCount} icon={FiMessageCircle} className="bg-amber-50 text-amber-700" />
                 <StatCard title="بسته‌شده" value={data.stats.closedCount} icon={FiXCircle} className="bg-slate-50 text-slate-700" />
-                <StatCard title="فوری باز" value={data.stats.urgentCount} icon={FiAlertTriangle} className="bg-red-50 text-red-700" />
             </section>
 
             <TicketFilters />

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import {
-    FiArchive,
     FiBarChart2,
     FiBox,
     FiCoffee,
@@ -91,11 +90,6 @@ const navigationGroups = [
                 title: "گزارش‌ها",
                 href: "/admin/reports",
                 icon: FiBarChart2,
-            },
-            {
-                title: "آرشیو",
-                href: "/admin/archive",
-                icon: FiArchive,
             },
             {
                 title: "تنظیمات",

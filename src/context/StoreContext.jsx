@@ -337,8 +337,7 @@ export function StoreProvider({ children }) {
 
         window.addEventListener("mmd-auth-changed", handleAuthChanged);
         return () => window.removeEventListener("mmd-auth-changed", handleAuthChanged);
-        // فقط بعد از Hydrate اولیه اجرا می‌شود؛ wishlist محلی داخل تابع Merge می‌شود.
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, [isHydrated]);
 
     const recordInteraction = (product, event = "view") => {

@@ -47,7 +47,7 @@ export default function ReviewFilters() {
         }, 400);
 
         return () => window.clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [searchValue, currentSearch]);
 
     const activeCount = [
@@ -94,7 +94,6 @@ export default function ReviewFilters() {
                         <option value="pending">در انتظار بررسی</option>
                         <option value="approved">تأییدشده</option>
                         <option value="rejected">ردشده</option>
-                        <option value="archived">بایگانی‌شده</option>
                     </select>
 
                     <select

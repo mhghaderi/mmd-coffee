@@ -6,7 +6,7 @@ import Product from "@/models/Product";
 
 import { getCurrentUser, requireAdmin } from "@/lib/auth/session";
 
-const allowedStatuses = ["draft", "published", "archived"];
+const allowedStatuses = ["draft", "published"];
 
 const allowedIntensities = ["low", "medium", "high"];
 
@@ -509,15 +509,6 @@ function createErrorResponse(error, fallbackMessage) {
     );
 }
 
-/*
-  GET /api/products/:id
-
-  مقدار id می‌تواند:
-  - شناسه MongoDB
-  - slug محصول
-  باشد.
-*/
-
 export async function GET(request, { params }) {
     try {
         await connectToDB();
@@ -577,10 +568,6 @@ export async function GET(request, { params }) {
         return createErrorResponse(error, "دریافت محصول انجام نشد");
     }
 }
-
-/*
-  PATCH /api/products/:id
-*/
 
 export async function PATCH(request, { params }) {
     const authorization = await requireAdmin();
@@ -692,16 +679,6 @@ export async function PATCH(request, { params }) {
 
         product.set(update);
 
-        if (update.status === "archived") {
-            product.archivedAt = new Date();
-            product.isAvailable = false;
-            product.isFeatured = false;
-        }
-
-        if (update.status && update.status !== "archived") {
-            product.archivedAt = null;
-        }
-
         if (product.status === "published" && !product.image?.trim()) {
             return Response.json(
                 {
@@ -735,13 +712,6 @@ export async function PATCH(request, { params }) {
         return createErrorResponse(error, "ویرایش محصول انجام نشد");
     }
 }
-
-/*
-  DELETE /api/products/:id
-
-  حذف در این مرحله به‌صورت Soft Delete است.
-  محصول بایگانی می‌شود و سند آن باقی می‌ماند.
-*/
 
 export async function DELETE(request, { params }) {
     const authorization = await requireAdmin();
@@ -780,37 +750,12 @@ export async function DELETE(request, { params }) {
             );
         }
 
-        if (product.status === "archived") {
-            return Response.json(
-                {
-                    success: true,
-                    message: "این محصول قبلاً بایگانی شده است",
-                    data: product,
-                },
-                {
-                    status: 200,
-                },
-            );
-        }
-
-        product.status = "archived";
-        product.archivedAt = new Date();
-        product.isAvailable = false;
-        product.isFeatured = false;
-
-        await product.save();
+        await Product.findByIdAndDelete(id);
 
         return Response.json(
             {
                 success: true,
-                message: "محصول با موفقیت بایگانی شد",
-                data: {
-                    _id: product._id,
-                    name: product.name,
-                    slug: product.slug,
-                    status: product.status,
-                    archivedAt: product.archivedAt,
-                },
+                message: "محصول با موفقیت حذف شد",
             },
             {
                 status: 200,

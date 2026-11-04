@@ -50,10 +50,6 @@ const pageTitles = [
         title: "گزارش‌ها",
     },
     {
-        path: "/admin/archive",
-        title: "آرشیو",
-    },
-    {
         path: "/admin/settings",
         title: "تنظیمات",
     },

@@ -1,3 +1,4 @@
+import syncProductReviewStats from "@/lib/reviews/syncProductReviewStats";
 import mongoose from "mongoose";
 
 import connectToDB from "@/lib/db/connectToDB";
@@ -77,12 +78,9 @@ export async function GET(request) {
 
         const reviews = await Review.find(query)
             .select(
-                "author rating title content isVerifiedPurchase isFeatured helpfulCount adminReply createdAt",
+                "author rating title content isVerifiedPurchase adminReply createdAt",
             )
-            .populate({
-                path: "adminReply.repliedBy",
-                select: "name avatar",
-            })
+            
             .sort({
                 isFeatured: -1,
                 createdAt: -1,
@@ -208,27 +206,6 @@ export async function POST(request) {
             );
         }
 
-        if (
-            currentUser &&
-            (await Review.exists({
-                product: product._id,
-                user: currentUser.id,
-                status: {
-                    $in: ["pending", "approved"],
-                },
-            }))
-        ) {
-            return Response.json(
-                {
-                    success: false,
-                    message: "برای این محصول قبلاً یک نظر فعال ثبت کرده‌ای",
-                },
-                {
-                    status: 409,
-                },
-            );
-        }
-
         let isVerifiedPurchase = false;
 
         if (currentUser) {
@@ -254,13 +231,15 @@ export async function POST(request) {
             title,
             content,
             isVerifiedPurchase,
-            status: "pending",
+            status: "approved",
         });
+
+        await syncProductReviewStats(product._id);
 
         return Response.json(
             {
                 success: true,
-                message: "نظر ثبت شد و پس از بررسی مدیر نمایش داده می‌شود",
+                message: "نظر شما با موفقیت ثبت و منتشر شد",
                 data: {
                     _id: review._id,
                     status: review.status,

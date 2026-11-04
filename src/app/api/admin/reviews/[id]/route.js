@@ -52,7 +52,7 @@ export async function PATCH(request, { params }) {
         const previousProductId = review.product.toString();
 
         if (Object.hasOwn(body, "status")) {
-            if (!["pending", "approved", "rejected", "archived"].includes(body.status)) {
+            if (!["pending", "approved", "rejected"].includes(body.status)) {
                 return Response.json(
                     {
                         success: false,
@@ -110,13 +110,9 @@ export async function PATCH(request, { params }) {
         }
 
         if (Object.hasOwn(body, "adminReply")) {
-            const message = cleanText(body.adminReply, 1500);
-
-            review.adminReply = {
-                message,
-                repliedBy: message ? authorization.user.id : null,
-                repliedAt: message ? new Date() : null,
-            };
+            const replyMsg = typeof body.adminReply === "string" ? body.adminReply.trim() : (body.adminReply?.message || "");
+            review.adminReply = replyMsg;
+            review.repliedAt = replyMsg ? new Date() : null;
         }
 
         await review.save();
@@ -153,6 +149,49 @@ export async function PATCH(request, { params }) {
             {
                 status: 500,
             },
+        );
+    }
+}
+
+export async function DELETE(request, { params }) {
+    const authorization = await requireAdmin();
+
+    if (!authorization.ok) {
+        return authorization.response;
+    }
+
+    try {
+        await connectToDB();
+
+        const { id } = await params;
+
+        if (!mongoose.isValidObjectId(id)) {
+            return Response.json(
+                { success: false, message: "شناسه نظر معتبر نیست" },
+                { status: 400 },
+            );
+        }
+
+        const review = await Review.findByIdAndDelete(id);
+
+        if (!review) {
+            return Response.json(
+                { success: false, message: "نظر پیدا نشد" },
+                { status: 404 },
+            );
+        }
+
+        await syncProductReviewStats(review.product.toString());
+
+        return Response.json({
+            success: true,
+            message: "نظر با موفقیت حذف شد",
+        });
+    } catch (error) {
+        console.error("DELETE REVIEW ERROR:", error);
+        return Response.json(
+            { success: false, message: "حذف نظر انجام نشد" },
+            { status: 500 },
         );
     }
 }

@@ -1,32 +1,5 @@
 import mongoose from "mongoose";
 
-import { REVIEW_STATUS_VALUES } from "@/constants/review";
-
-const adminReplySchema = new mongoose.Schema(
-    {
-        message: {
-            type: String,
-            trim: true,
-            maxlength: [1500, "پاسخ مدیر نمی‌تواند بیشتر از ۱۵۰۰ کاراکتر باشد"],
-            default: "",
-        },
-
-        repliedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            default: null,
-        },
-
-        repliedAt: {
-            type: Date,
-            default: null,
-        },
-    },
-    {
-        _id: false,
-    },
-);
-
 const reviewSchema = new mongoose.Schema(
     {
         product: {
@@ -55,7 +28,6 @@ const reviewSchema = new mongoose.Schema(
                 type: String,
                 trim: true,
                 lowercase: true,
-                maxlength: [150, "ایمیل بیش‌ازحد طولانی است"],
                 default: "",
             },
         },
@@ -71,7 +43,6 @@ const reviewSchema = new mongoose.Schema(
         title: {
             type: String,
             trim: true,
-            maxlength: [120, "عنوان نظر نمی‌تواند بیشتر از ۱۲۰ کاراکتر باشد"],
             default: "",
         },
 
@@ -79,61 +50,27 @@ const reviewSchema = new mongoose.Schema(
             type: String,
             required: [true, "متن نظر الزامی است"],
             trim: true,
-            minlength: [5, "متن نظر باید حداقل ۵ کاراکتر باشد"],
-            maxlength: [2000, "متن نظر نمی‌تواند بیشتر از ۲۰۰۰ کاراکتر باشد"],
         },
 
         status: {
             type: String,
-            enum: {
-                values: REVIEW_STATUS_VALUES,
-                message: "وضعیت نظر معتبر نیست",
-            },
-            default: "pending",
+            enum: ["pending", "approved", "rejected"],
+            default: "approved",
             index: true,
         },
 
         isVerifiedPurchase: {
             type: Boolean,
             default: false,
-            index: true,
-        },
-
-        isFeatured: {
-            type: Boolean,
-            default: false,
-            index: true,
-        },
-
-        helpfulCount: {
-            type: Number,
-            default: 0,
-            min: 0,
-        },
-
-        rejectionReason: {
-            type: String,
-            trim: true,
-            maxlength: [500, "دلیل رد نمی‌تواند بیشتر از ۵۰۰ کاراکتر باشد"],
-            default: "",
         },
 
         adminReply: {
-            type: adminReplySchema,
-            default: () => ({
-                message: "",
-                repliedBy: null,
-                repliedAt: null,
-            }),
+            type: String,
+            trim: true,
+            default: "",
         },
 
-        moderatedBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-            default: null,
-        },
-
-        moderatedAt: {
+        repliedAt: {
             type: Date,
             default: null,
         },
@@ -146,12 +83,6 @@ const reviewSchema = new mongoose.Schema(
 reviewSchema.index({
     product: 1,
     status: 1,
-    createdAt: -1,
-});
-
-reviewSchema.index({
-    user: 1,
-    product: 1,
     createdAt: -1,
 });
 

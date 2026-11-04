@@ -32,7 +32,7 @@ function firstValue(value) {
 }
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
 }
 
 function serialize(value) {
@@ -63,7 +63,7 @@ export default async function getAdminArticles(rawSearchParams = {}) {
 
     const query = {};
 
-    if (["draft", "published", "archived"].includes(filters.status)) {
+    if (["draft", "published"].includes(filters.status)) {
         query.status = filters.status;
     }
 
@@ -98,14 +98,13 @@ export default async function getAdminArticles(rawSearchParams = {}) {
     startOfMonth.setDate(1);
     startOfMonth.setHours(0, 0, 0, 0);
 
-    const [total, allCount, draftCount, publishedCount, archivedCount, featuredCount, monthCount] =
+    const [total, allCount, draftCount, publishedCount, featuredCount, monthCount] =
         await Promise.all([
             Article.countDocuments(query),
             Article.countDocuments(),
             Article.countDocuments({ status: "draft" }),
             Article.countDocuments({ status: "published" }),
-            Article.countDocuments({ status: "archived" }),
-            Article.countDocuments({ isFeatured: true, status: "published" }),
+                        Article.countDocuments({ isFeatured: true, status: "published" }),
             Article.countDocuments({ createdAt: { $gte: startOfMonth } }),
         ]);
 
@@ -139,8 +138,7 @@ export default async function getAdminArticles(rawSearchParams = {}) {
             allCount,
             draftCount,
             publishedCount,
-            archivedCount,
-            featuredCount,
+                        featuredCount,
             monthCount,
         },
     };

@@ -28,7 +28,7 @@ function normalizeTags(value) {
 }
 
 function createArticlePayload(body, currentUser) {
-    const status = ["draft", "published", "archived"].includes(body.status)
+    const status = ["draft", "published"].includes(body.status)
         ? body.status
         : "draft";
 
@@ -49,7 +49,7 @@ function createArticlePayload(body, currentUser) {
         seoTitle: cleanText(body.seoTitle, 70),
         seoDescription: cleanText(body.seoDescription, 180),
         publishedAt: status === "published" ? new Date() : null,
-        archivedAt: status === "archived" ? new Date() : null,
+        archivedAt: null,
     };
 }
 

@@ -45,27 +45,19 @@ export async function getCurrentUser() {
 
         const payload = verifyAuthToken(token);
 
-        await connectToDB();
-
-        /*
-      اطلاعات نقش از دیتابیس خوانده می‌شود؛
-      بنابراین فقط به role داخل JWT اعتماد نمی‌کنیم.
-    */
-
-        const user = await User.findOne({
-            _id: payload.userId,
-            isActive: true,
-        })
-            .select(
-                "name email role phone avatar isActive emailVerified lastLoginAt tokenVersion createdAt updatedAt",
-            )
-            .lean();
-
-        if (!user) {
+        if (!payload?.userId) {
             return null;
         }
 
-        if (Number(user.tokenVersion) !== Number(payload.tokenVersion)) {
+        await connectToDB();
+
+        const user = await User.findById(payload.userId)
+            .select(
+                "name email role phone avatar isActive emailVerified lastLoginAt createdAt updatedAt",
+            )
+            .lean();
+
+        if (!user || user.isActive === false) {
             return null;
         }
 
@@ -81,7 +73,6 @@ export async function requireAuthenticatedUser() {
     if (!user) {
         return {
             ok: false,
-
             response: Response.json(
                 {
                     success: false,
@@ -110,7 +101,6 @@ export async function requireAdmin() {
     if (authentication.user.role !== "admin") {
         return {
             ok: false,
-
             response: Response.json(
                 {
                     success: false,

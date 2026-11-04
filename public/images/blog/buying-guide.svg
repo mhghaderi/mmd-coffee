@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2c1810"/>
+      <stop offset="50%" stop-color="#4a2c1d"/>
+      <stop offset="100%" stop-color="#1a0e0a"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c8793f" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#c8793f" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#bg)"/>
+  <circle cx="400" cy="225" r="200" fill="url(#glow)"/>
+  <g transform="translate(400, 210) scale(1.5)" fill="none" stroke="#e8c39e" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M-30,-20 C-30,-40 30,-40 30,-20 C30,20 -30,20 -30,-20 Z" fill="#8e5b3d" fill-opacity="0.4"/>
+    <path d="M0,-35 C-5,-10 5,10 0,35" stroke="#e8c39e" stroke-width="2.5"/>
+    <circle cx="-45" cy="15" r="12" fill="#c8793f" fill-opacity="0.3" stroke="#e8c39e"/>
+    <circle cx="45" cy="20" r="15" fill="#c8793f" fill-opacity="0.3" stroke="#e8c39e"/>
+  </g>
+  <text x="400" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="bold" fill="#f5ebe0" text-anchor="middle">راهنمای انتخاب دانه قهوه</text>
+  <text x="400" y="375" font-family="system-ui, -apple-system, sans-serif" font-size="14" fill="#d4a373" text-anchor="middle">MMD COFFEE GUIDE</text>
+</svg>

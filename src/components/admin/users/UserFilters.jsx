@@ -60,7 +60,7 @@ export default function UserFilters() {
         }, 400);
 
         return () => window.clearTimeout(timer);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        
     }, [searchValue, currentSearch]);
 
     const activeFiltersCount = [

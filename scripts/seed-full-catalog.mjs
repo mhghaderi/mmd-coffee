@@ -24,9 +24,10 @@ const root = process.cwd();
 loadEnvironmentFile(path.join(root, ".env.local"));
 loadEnvironmentFile(path.join(root, ".env"));
 
-if (!process.env.MONGO_URL) {
-  throw new Error("MONGO_URL در .env.local یا .env تعریف نشده است.");
-}
+const mongoUrl =
+  process.env.MONGO_URL ||
+  process.env.MONGODB_URI ||
+  "mongodb://127.0.0.1:27017/mmd-coffee";
 
 const now = new Date();
 
@@ -129,7 +130,7 @@ function localImagePath(webPath) {
 }
 
 async function run() {
-  await mongoose.connect(process.env.MONGO_URL);
+  await mongoose.connect(mongoUrl);
   const db = mongoose.connection.db;
   const categoriesCollection = db.collection("categories");
   const productsCollection = db.collection("products");
@@ -142,7 +143,7 @@ async function run() {
     await categoriesCollection.updateOne(
       { slug: category.slug },
       {
-        $set: { ...category, image: "", imageAlt: category.title, isActive: true, archivedAt: null, updatedAt: now },
+        $set: { ...category, image: "", imageAlt: category.title, isActive: true,  updatedAt: now },
         $setOnInsert: { _id: id, createdAt: now },
       },
       { upsert: true },
@@ -176,7 +177,7 @@ async function run() {
           preparationTime: catalogType === "cafe" ? Math.max(1, Number(product.preparationTime) || 5) : 0,
           isAvailable: true,
           status: "published",
-          archivedAt: null,
+          
           viewsCount: current?.viewsCount || 0,
           wishlistCount: current?.wishlistCount || 0,
           seoTitle: product.name,

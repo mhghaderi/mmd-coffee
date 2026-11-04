@@ -23,10 +23,6 @@ const statusConfig = {
         className: "bg-amber-50 text-amber-700",
     },
 
-    archived: {
-        title: "بایگانی‌شده",
-        className: "bg-slate-100 text-slate-600",
-    },
 };
 
 function ProductImage({ product }) {
@@ -50,10 +46,6 @@ function ProductImage({ product }) {
 }
 
 function ProductAvailability({ product }) {
-    if (product.status === "archived") {
-        return <span className="text-xs font-bold text-slate-400">غیرفعال</span>;
-    }
-
     return (
         <span
             className={`inline-flex items-center gap-1.5 text-xs font-bold ${
@@ -86,7 +78,6 @@ export default function ProductsTable({ products }) {
 
     return (
         <>
-            {/* Desktop table */}
 
             <div className="hidden overflow-visible rounded-[2rem] border border-coffee-100 bg-white shadow-[0_14px_50px_rgba(48,32,26,0.06)] md:block">
                 <div className="overflow-x-auto overflow-y-visible">
@@ -206,8 +197,6 @@ export default function ProductsTable({ products }) {
                     </table>
                 </div>
             </div>
-
-            {/* Mobile cards */}
 
             <div className="grid gap-4 md:hidden">
                 {products.map((product) => {

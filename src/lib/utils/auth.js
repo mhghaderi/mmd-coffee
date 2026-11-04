@@ -1,5 +1,5 @@
 import { hash, compare } from "bcryptjs";
-import bcrypt from 'bcryptjs'; // یا bcrypt
+import bcrypt from 'bcryptjs'; 
 
 import { sign, verify } from "jsonwebtoken";
 

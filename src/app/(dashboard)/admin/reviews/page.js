@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import {
-    FiArchive,
     FiCheckCircle,
     FiClock,
     FiMessageSquare,
@@ -53,13 +52,12 @@ export default async function AdminReviewsPage({ searchParams }) {
                 </p>
             </section>
 
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
                 <StatCard title="همه نظرات" value={data.stats.total} icon={FiMessageSquare} className="bg-coffee-100 text-coffee-700" />
                 <StatCard title="در انتظار" value={data.stats.pendingCount} icon={FiClock} className="bg-amber-50 text-amber-700" />
                 <StatCard title="تأییدشده" value={data.stats.approvedCount} icon={FiCheckCircle} className="bg-emerald-50 text-emerald-700" />
                 <StatCard title="ردشده" value={data.stats.rejectedCount} icon={FiXCircle} className="bg-red-50 text-red-700" />
-                <StatCard title="بایگانی" value={data.stats.archivedCount} icon={FiArchive} className="bg-slate-50 text-slate-700" />
-                <StatCard title="خرید تأییدشده" value={data.stats.verifiedCount} icon={FiShield} className="bg-blue-50 text-blue-700" />
+                                <StatCard title="خرید تأییدشده" value={data.stats.verifiedCount} icon={FiShield} className="bg-blue-50 text-blue-700" />
             </section>
 
             <ReviewFilters />

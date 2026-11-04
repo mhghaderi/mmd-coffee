@@ -5,7 +5,7 @@ import connectToDB from "@/lib/db/connectToDB";
 import Category from "@/models/Category";
 import Product from "@/models/Product";
 
-const allowedStatuses = ["all", "published", "draft", "archived"];
+const allowedStatuses = ["all", "published", "draft"];
 
 const allowedAvailability = ["all", "available", "unavailable"];
 
@@ -42,7 +42,7 @@ function getFirstQueryValue(value) {
 }
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return value.replace(/[.*+?^$()|[\]\\]/g, "\\$&");
 }
 
 function normalizePage(value) {
@@ -152,11 +152,11 @@ export default async function getAdminProducts(rawSearchParams = {}) {
         filter.isAvailable = false;
     }
 
-    const [total, categories, totalProducts, publishedProducts, draftProducts, archivedProducts] =
+    const [total, categories, totalProducts, publishedProducts, draftProducts] =
         await Promise.all([
             Product.countDocuments(filter),
 
-            Category.find({})
+            Category.find()
                 .select("title slug isActive")
                 .sort({
                     displayOrder: 1,
@@ -172,10 +172,6 @@ export default async function getAdminProducts(rawSearchParams = {}) {
 
             Product.countDocuments({
                 status: "draft",
-            }),
-
-            Product.countDocuments({
-                status: "archived",
             }),
         ]);
 
@@ -222,7 +218,6 @@ export default async function getAdminProducts(rawSearchParams = {}) {
             totalProducts,
             publishedProducts,
             draftProducts,
-            archivedProducts,
-        },
+                    },
     };
 }

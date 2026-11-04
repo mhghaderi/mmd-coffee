@@ -36,7 +36,6 @@ const aboutStatSchema = new mongoose.Schema(
     { _id: false },
 );
 
-
 const footerLinkSchema = new mongoose.Schema(
     {
         title: { type: String, trim: true, required: true, maxlength: 80 },
@@ -70,7 +69,7 @@ const siteContentSchema = new mongoose.Schema(
         home: {
             hero: {
                 eyebrow: { type: String, trim: true, default: "پیشنهادهای محبوب ممد کافی" },
-                // title قدیمی را نگه می‌داریم تا داده‌های نسخه قبل سازگار بمانند.
+                
                 title: { type: String, trim: true, default: "هر روزت را با یک فنجان خوب شروع کن" },
                 titlePrefix: { type: String, trim: true, default: "هر روزت را با یک" },
                 highlightTitle: { type: String, trim: true, default: "فنجان خوب" },
