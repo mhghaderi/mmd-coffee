@@ -1,4 +1,4 @@
-export const authTypes = {
+git sexport const authTypes = {
     LOGIN: "login",
     REGISTER: "register",
 };
